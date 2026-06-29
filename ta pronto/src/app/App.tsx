@@ -52,8 +52,10 @@ function AppRoutes() {
 }
 
 export default function App() {
+  const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <AppProvider>
         <div className="min-h-screen bg-[#0A1628]">
           <AppRoutes />
