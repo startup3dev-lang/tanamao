@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router';
+import { HashRouter, Routes, Route, useLocation } from 'react-router';
 import { useEffect } from 'react';
 import { AppProvider } from './context/AppContext';
 import { Header } from './components/Header';
@@ -52,15 +52,13 @@ function AppRoutes() {
 }
 
 export default function App() {
-  const basename = import.meta.env.BASE_URL.replace(/\/$/, '');
-
   return (
-    <BrowserRouter basename={basename}>
+    <HashRouter>
       <AppProvider>
         <div className="min-h-screen bg-[#0A1628]">
           <AppRoutes />
         </div>
       </AppProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
