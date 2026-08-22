@@ -94,12 +94,12 @@ export function Home() {
           </div>
 
           <h1 className="hero-el text-white font-black leading-tight mb-4" style={{ opacity: 0, fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
-            Localize o profissional que<br />
-            <span className="text-[#FFD100]">você precisa</span> mais próximo de você.
+            Resolva seu problema<br />
+            <span className="text-[#FFD100]">com quem está perto</span> de você.
           </h1>
 
           <p className="hero-el text-white/60 mb-8 max-w-xl mx-auto leading-relaxed" style={{ opacity: 0, fontSize: '1.05rem' }}>
-            Pedreiro, eletricista, encanador, pintor, diarista e outros profissionais prontos para te atender em poucos cliques.
+            Diga o serviço que precisa e veja agora profissionais disponíveis perto de você. Sem cadastro para pesquisar.
           </p>
 
           {/* Search box */}
@@ -111,7 +111,8 @@ export function Home() {
                 value={searchValue}
                 onChange={e => setSearchValue(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                placeholder="Digite seu endereço ou use sua localização atual"
+                placeholder="Qual serviço você precisa?"
+                aria-label="Qual serviço você precisa?"
                 className="min-w-0 flex-1 text-sm text-[#1A2A4A] outline-none placeholder-gray-400"
               />
             </div>
@@ -119,7 +120,7 @@ export function Home() {
               onClick={handleSearch}
               className="w-full shrink-0 rounded-xl bg-[#FFD100] px-5 py-3 text-sm font-bold text-[#0A1628] transition-colors hover:bg-[#FFDE33] sm:w-auto"
             >
-              Buscar profissionais
+              Encontrar agora
             </button>
           </div>
 
@@ -129,9 +130,12 @@ export function Home() {
             className="hero-el inline-flex items-center gap-2 text-white/60 text-sm hover:text-white transition-colors" style={{ opacity: 0 }}
           >
             <Navigation size={14} className="text-[#FFD100]" />
-            <span>Buscando em: <span className="text-white font-medium">{location}</span></span>
+            <span>Perto de: <span className="text-white font-medium">{location}</span></span>
             <span className="text-[#FFD100] underline">Alterar</span>
           </button>
+          <p className="hero-el mt-3 text-xs text-white/40" style={{ opacity: 0 }}>
+            Você só entra ou cria uma conta quando decidir solicitar o serviço.
+          </p>
         </div>
       </section>
 
