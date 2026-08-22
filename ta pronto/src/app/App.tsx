@@ -14,6 +14,7 @@ const ProfessionalDetail = lazy(() => import('./pages/ProfessionalDetail').then(
 const QuoteRequest = lazy(() => import('./pages/QuoteRequest').then(module => ({ default: module.QuoteRequest })));
 const ServiceTracking = lazy(() => import('./pages/ServiceTracking').then(module => ({ default: module.ServiceTracking })));
 const Chat = lazy(() => import('./pages/Chat').then(module => ({ default: module.Chat })));
+const Chats = lazy(() => import('./pages/Chats').then(module => ({ default: module.Chats })));
 const Rating = lazy(() => import('./pages/Rating').then(module => ({ default: module.Rating })));
 const ClientArea = lazy(() => import('./pages/ClientArea').then(module => ({ default: module.ClientArea })));
 const Offers = lazy(() => import('./pages/Offers').then(module => ({ default: module.Offers })));
@@ -41,6 +42,7 @@ function AppRoutes() {
         <Route path="/orcamento" element={<QuoteRequest />} />
         <Route path="/acompanhamento" element={<ServiceTracking />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/chats" element={<Chats />} />
         <Route path="/avaliacao" element={<Rating />} />
         <Route path="/cliente" element={<ClientArea />} />
         <Route path="/ofertas" element={<Offers />} />

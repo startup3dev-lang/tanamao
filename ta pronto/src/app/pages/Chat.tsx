@@ -41,7 +41,7 @@ export function Chat() {
 
   return (
     <PageTransition>
-      <div className="h-screen bg-[#0A1628] flex flex-col pt-16">
+      <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0A1628] pt-16">
         {/* Chat header */}
         <div className="bg-[#0D1F3C] border-b border-white/10 py-3 px-4 shrink-0">
           <div className="max-w-2xl mx-auto flex items-center gap-3">
@@ -76,7 +76,7 @@ export function Chat() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
           <div className="max-w-2xl mx-auto space-y-3">
             {messages.map(msg => (
               <div key={msg.id} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -95,7 +95,7 @@ export function Chat() {
         </div>
 
         {/* Input */}
-        <div className="bg-[#0D1F3C] border-t border-white/10 px-4 py-3 shrink-0">
+        <div className="shrink-0 border-t border-white/10 bg-[#0D1F3C] px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4">
           <div className="max-w-2xl mx-auto flex items-center gap-2">
             <button className="p-2 text-white/40 hover:text-white transition-colors">
               <Image size={20} />
@@ -103,14 +103,14 @@ export function Chat() {
             <button className="p-2 text-white/40 hover:text-white transition-colors">
               <MapPin size={20} />
             </button>
-            <div className="flex-1 flex items-center bg-white/10 border border-white/20 rounded-2xl px-4 py-2">
+            <div className="flex min-w-0 flex-1 items-center rounded-2xl border border-white/20 bg-white/10 px-4 py-2">
               <input
                 type="text"
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && sendMessage()}
                 placeholder="Escreva uma mensagem..."
-                className="flex-1 bg-transparent text-white text-sm placeholder-white/40 outline-none"
+                className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder-white/40"
               />
             </div>
             <button

@@ -1,16 +1,18 @@
 import { Link, useLocation } from 'react-router';
-import { Home, Search, ClipboardList, Heart, User } from 'lucide-react';
+import { Home, Search, ClipboardList, MessageCircle, User } from 'lucide-react';
 
 const tabs = [
   { label: 'Início', to: '/', icon: Home },
   { label: 'Buscar', to: '/profissionais', icon: Search },
   { label: 'Pedidos', to: '/acompanhamento', icon: ClipboardList },
-  { label: 'Favoritos', to: '/favoritos', icon: Heart },
+  { label: 'Chats', to: '/chats', icon: MessageCircle },
   { label: 'Perfil', to: '/cliente', icon: User },
 ];
 
 export function MobileNav() {
   const { pathname } = useLocation();
+
+  if (pathname === '/chat') return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#0A1628] border-t border-white/10">
