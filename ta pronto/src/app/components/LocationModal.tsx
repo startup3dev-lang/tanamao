@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { MapPin, Navigation, X, Clock } from 'lucide-react';
 import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
-import { DEFAULT_LOCATION } from '../utils/serviceArea';
 
 const recentLocations = [
   'Av. Frei Serafim – Centro, Teresina - PI',
@@ -13,11 +12,14 @@ const recentLocations = [
 export function LocationModal() {
   const { showLocationModal, setShowLocationModal, setLocation } = useApp();
   const [input, setInput] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (showLocationModal) {
+      setLocationError('');
       document.body.style.overflow = 'hidden';
       gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 });
       gsap.fromTo(modalRef.current,
@@ -44,8 +46,52 @@ export function LocationModal() {
   };
 
   const handleUseMyLocation = () => {
-    setLocation(DEFAULT_LOCATION);
-    handleClose();
+    setLocationError('');
+
+    if (!navigator.geolocation) {
+      setLocationError('Seu navegador não oferece suporte à localização. Digite sua cidade acima.');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      try {
+        const params = new URLSearchParams({
+          format: 'jsonv2',
+          lat: String(coords.latitude),
+          lon: String(coords.longitude),
+          zoom: '10',
+          addressdetails: '1',
+          'accept-language': 'pt-BR',
+        });
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?${params}`);
+        if (!response.ok) throw new Error('Reverse geocoding failed');
+
+        const data = await response.json() as {
+          address?: Record<string, string>;
+        };
+        const address = data.address ?? {};
+        const city = address.city || address.town || address.municipality || address.village;
+        const stateCode = address['ISO3166-2-lvl4']?.split('-')[1];
+
+        if (!city) throw new Error('City not found');
+        setLocation(stateCode ? `${city} - ${stateCode}` : `${city} - ${address.state || 'Brasil'}`);
+        handleClose();
+      } catch {
+        setLocationError('Não conseguimos identificar sua cidade. Digite-a manualmente acima.');
+      } finally {
+        setIsLocating(false);
+      }
+    }, (error) => {
+      setIsLocating(false);
+      setLocationError(error.code === error.PERMISSION_DENIED
+        ? 'Permissão de localização negada. Libere o acesso no navegador ou digite sua cidade.'
+        : 'Não foi possível obter sua localização. Tente novamente ou digite sua cidade.');
+    }, {
+      enableHighAccuracy: false,
+      timeout: 10000,
+      maximumAge: 300000,
+    });
   };
 
   if (!showLocationModal) return null;
@@ -82,16 +128,27 @@ export function LocationModal() {
           {/* Use my location */}
           <button
             onClick={handleUseMyLocation}
+            disabled={isLocating}
             className="flex items-center gap-3 w-full p-3 rounded-xl border border-[#FFD100]/30 bg-[#FFD100]/5 hover:bg-[#FFD100]/10 transition-colors"
           >
             <div className="w-8 h-8 bg-[#FFD100] rounded-full flex items-center justify-center shrink-0">
-              <Navigation size={14} className="text-[#0A1628]" />
+              {isLocating
+                ? <Navigation size={15} className="animate-spin text-[#0A1628]" />
+                : <Navigation size={14} className="text-[#0A1628]" />}
             </div>
             <div className="text-left">
-              <p className="text-[#1A2A4A] font-semibold text-sm">Usar minha localização atual</p>
-              <p className="text-gray-400 text-xs">Detectar automaticamente</p>
+              <p className="text-[#1A2A4A] font-semibold text-sm">
+                {isLocating ? 'Encontrando sua localização...' : 'Usar minha localização atual'}
+              </p>
+              <p className="text-gray-400 text-xs">Permitir acesso à localização do dispositivo</p>
             </div>
           </button>
+
+          {locationError && (
+            <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-xs leading-relaxed text-red-600">
+              {locationError}
+            </p>
+          )}
 
           {/* Recent locations */}
           <div>
@@ -109,7 +166,10 @@ export function LocationModal() {
           </div>
 
           <p className="text-gray-400 text-xs text-center">
-            Usamos sua localização apenas para encontrar profissionais próximos.
+            Usamos sua localização apenas para encontrar profissionais próximos. Geocodificação por{' '}
+            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="underline">
+              OpenStreetMap
+            </a>.
           </p>
 
           <button
