@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { MapPin, Navigation, X, Clock } from 'lucide-react';
 import gsap from 'gsap';
 import { useApp } from '../context/AppContext';
+import { DEFAULT_LOCATION } from '../utils/serviceArea';
 
 const recentLocations = [
-  'Rua das Flores, 123 – Vila Mariana, SP',
-  'Av. Paulista, 1000 – Bela Vista, SP',
-  'Rua Augusta, 500 – Consolação, SP',
+  'Av. Frei Serafim – Centro, Teresina - PI',
+  'Av. Dom Severino – Fátima, Teresina - PI',
+  'Av. Raul Lopes – Jóquei, Teresina - PI',
 ];
 
 export function LocationModal() {
@@ -43,7 +44,7 @@ export function LocationModal() {
   };
 
   const handleUseMyLocation = () => {
-    setLocation('Sua localização atual');
+    setLocation(DEFAULT_LOCATION);
     handleClose();
   };
 

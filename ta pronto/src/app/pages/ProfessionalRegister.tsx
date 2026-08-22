@@ -167,7 +167,7 @@ export function ProfessionalRegister() {
                 </p>
                 <div className="bg-[#0D1F3C] rounded-2xl p-4 text-left border border-white/10">
                   <p className="text-white font-semibold">{form.name || 'Profissional'}</p>
-                  <p className="text-white/50 text-sm">{form.profession || 'Serviços gerais'} · {form.city || 'São Paulo'}</p>
+                  <p className="text-white/50 text-sm">{form.profession || 'Serviços gerais'} · {form.city || 'Teresina'}</p>
                   <p className="text-[#FFD100] text-sm font-semibold mt-1">{form.price || 'A partir de R$ 80'}</p>
                 </div>
               </div>

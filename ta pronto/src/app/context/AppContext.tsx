@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { professionals, type Professional } from '../data/mockData';
+import { DEFAULT_LOCATION } from '../utils/serviceArea';
 
 interface AppContextType {
   location: string;
@@ -23,7 +24,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [location, setLocation] = useState('São Paulo, SP – Centro');
+  const [location, setLocation] = useState(DEFAULT_LOCATION);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);

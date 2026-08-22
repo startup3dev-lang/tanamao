@@ -7,6 +7,7 @@ import { ProfessionalCard } from '../components/ProfessionalCard';
 import { PageTransition } from '../components/PageTransition';
 import { useApp } from '../context/AppContext';
 import { CategoryIcon, BadgeIcon } from '../components/AppIcons';
+import { isLocationSupported } from '../utils/serviceArea';
 
 const filters = [
   { id: 'proximos', label: 'Mais próximos' },
@@ -31,6 +32,7 @@ export function Professionals() {
   const [activeFilter, setActiveFilter] = useState('proximos');
   const [selectedCat, setSelectedCat] = useState(initialCat);
   const { location, setShowLocationModal } = useApp();
+  const hasCoverage = isLocationSupported(location);
   const cardsRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
@@ -132,11 +134,27 @@ export function Professionals() {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4">
             <p className="text-white/50 text-sm">
-              <span className="text-white font-semibold">{filtered.length}</span> profissionais encontrados
+              <span className="text-white font-semibold">{hasCoverage ? filtered.length : 0}</span> profissionais encontrados
             </p>
           </div>
 
-          {filtered.length === 0 ? (
+          {!hasCoverage ? (
+            <div className="mx-auto max-w-lg py-16 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10">
+                <MapPin size={28} className="text-[#FFD100]" />
+              </div>
+              <p className="text-lg font-semibold text-white">Ainda não temos profissionais na sua região</p>
+              <p className="mt-2 text-sm leading-relaxed text-white/50">
+                No momento, nossos profissionais estão disponíveis apenas em Teresina - PI.
+              </p>
+              <button
+                onClick={() => setShowLocationModal(true)}
+                className="mt-6 rounded-xl bg-[#FFD100] px-5 py-3 text-sm font-bold text-[#0A1628] transition-colors hover:bg-[#FFDE33]"
+              >
+                Alterar localização
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-16">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10">
                 <BadgeIcon type="tag" />
