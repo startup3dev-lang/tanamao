@@ -1,11 +1,21 @@
 
-  # Add smooth GSAP transitions
+# TA PRONTO
 
-  This is a code bundle for Add smooth GSAP transitions. The original project is available at https://www.figma.com/design/YU8TIo0HbSEdJVxa3rH6V5/Add-smooth-GSAP-transitions.
+Marketplace para localizar, comparar e contratar prestadores de serviços próximos.
 
-  ## Running the code
+## Desenvolvimento
 
-  Run `npm i` to install the dependencies.
+```bash
+npm install
+npm run dev
+```
 
-  Run `npm run dev` to start the development server.
-  
+Para gerar a versão de produção:
+
+```bash
+npm run build
+```
+
+## Banco de dados
+
+O esquema base PostgreSQL, a migration inicial, os dados de catálogo e as decisões de arquitetura estão em [`database/README.md`](database/README.md).
