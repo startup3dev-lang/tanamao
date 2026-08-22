@@ -1,23 +1,23 @@
 import { HashRouter, Routes, Route, useLocation } from 'react-router';
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { AppProvider } from './context/AppContext';
 import { Header } from './components/Header';
 import { MobileNav } from './components/MobileNav';
 import { LocationModal } from './components/LocationModal';
 import { LoginModal } from './components/LoginModal';
 
-import { Home } from './pages/Home';
-import { Categories } from './pages/Categories';
-import { Professionals } from './pages/Professionals';
-import { ProfessionalDetail } from './pages/ProfessionalDetail';
-import { QuoteRequest } from './pages/QuoteRequest';
-import { ServiceTracking } from './pages/ServiceTracking';
-import { Chat } from './pages/Chat';
-import { Rating } from './pages/Rating';
-import { ClientArea } from './pages/ClientArea';
-import { Offers } from './pages/Offers';
-import { Favorites } from './pages/Favorites';
-import { ProfessionalRegister } from './pages/ProfessionalRegister';
+const Home = lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
+const Categories = lazy(() => import('./pages/Categories').then(module => ({ default: module.Categories })));
+const Professionals = lazy(() => import('./pages/Professionals').then(module => ({ default: module.Professionals })));
+const ProfessionalDetail = lazy(() => import('./pages/ProfessionalDetail').then(module => ({ default: module.ProfessionalDetail })));
+const QuoteRequest = lazy(() => import('./pages/QuoteRequest').then(module => ({ default: module.QuoteRequest })));
+const ServiceTracking = lazy(() => import('./pages/ServiceTracking').then(module => ({ default: module.ServiceTracking })));
+const Chat = lazy(() => import('./pages/Chat').then(module => ({ default: module.Chat })));
+const Rating = lazy(() => import('./pages/Rating').then(module => ({ default: module.Rating })));
+const ClientArea = lazy(() => import('./pages/ClientArea').then(module => ({ default: module.ClientArea })));
+const Offers = lazy(() => import('./pages/Offers').then(module => ({ default: module.Offers })));
+const Favorites = lazy(() => import('./pages/Favorites').then(module => ({ default: module.Favorites })));
+const ProfessionalRegister = lazy(() => import('./pages/ProfessionalRegister').then(module => ({ default: module.ProfessionalRegister })));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -32,7 +32,7 @@ function AppRoutes() {
       <Header />
       <LocationModal />
       <LoginModal />
-      <Routes>
+      <Suspense fallback={<div className="grid min-h-[70vh] place-items-center pt-16 text-sm font-medium text-black/45">Carregando…</div>}><Routes>
         <Route path="/" element={<Home />} />
         <Route path="/categorias" element={<Categories />} />
         <Route path="/profissionais" element={<Professionals />} />
@@ -45,7 +45,7 @@ function AppRoutes() {
         <Route path="/ofertas" element={<Offers />} />
         <Route path="/favoritos" element={<Favorites />} />
         <Route path="/cadastro-profissional" element={<ProfessionalRegister />} />
-      </Routes>
+      </Routes></Suspense>
       <MobileNav />
     </>
   );
@@ -55,7 +55,7 @@ export default function App() {
   return (
     <HashRouter>
       <AppProvider>
-        <div className="min-h-screen bg-[#0A1628]">
+        <div className="min-h-screen bg-[#f7f7f5]">
           <AppRoutes />
         </div>
       </AppProvider>

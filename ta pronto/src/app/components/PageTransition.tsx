@@ -1,21 +1,12 @@
-import { useEffect, useRef, ReactNode } from 'react';
-import gsap from 'gsap';
+import type { ReactNode } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 
 export function PageTransition({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    gsap.fromTo(
-      ref.current,
-      { opacity: 0, y: 36 },
-      { opacity: 1, y: 0, duration: 0.65, ease: 'power3.out' }
-    );
-  }, []);
+  const reduceMotion = useReducedMotion();
 
   return (
-    <div ref={ref} style={{ opacity: 0 }}>
+    <motion.main initial={reduceMotion ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={reduceMotion ? undefined : { opacity: 0, y: -10 }} transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}>
       {children}
-    </div>
+    </motion.main>
   );
 }

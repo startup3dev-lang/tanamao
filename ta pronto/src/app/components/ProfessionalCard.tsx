@@ -1,7 +1,6 @@
-import { useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { BadgeCheck, ChevronRight, Clock, Heart, MapPin, ShieldCheck, Sparkles, Star } from 'lucide-react';
-import gsap from 'gsap';
+import { motion } from 'motion/react';
 import { type Professional } from '../data/mockData';
 import { useApp } from '../context/AppContext';
 
@@ -13,16 +12,7 @@ interface ProfessionalCardProps {
 export function ProfessionalCard({ pro, featured = false }: ProfessionalCardProps) {
   const navigate = useNavigate();
   const { setSelectedProfessional, favorites, toggleFavorite, setShowLoginModal, setLoginIntent, isLoggedIn } = useApp();
-  const cardRef = useRef<HTMLDivElement>(null);
   const isFav = favorites.includes(pro.id);
-
-  const handleMouseEnter = () => {
-    gsap.to(cardRef.current, { y: -4, scale: 1.01, duration: 0.25, ease: 'power2.out' });
-  };
-
-  const handleMouseLeave = () => {
-    gsap.to(cardRef.current, { y: 0, scale: 1, duration: 0.3, ease: 'power2.inOut' });
-  };
 
   const handleViewProfile = () => {
     setSelectedProfessional(pro);
@@ -40,10 +30,8 @@ export function ProfessionalCard({ pro, featured = false }: ProfessionalCardProp
   };
 
   return (
-    <div
-      ref={cardRef}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <motion.article
+      whileHover={{ y: -4 }} transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       className={`overflow-hidden rounded-2xl border bg-[#112340]/90 shadow-2xl shadow-black/15 transition-all hover:border-[#FFD100]/45 ${
         featured ? 'border-[#FFD100] ring-1 ring-[#FFD100]/40' : 'border-white/12'
       }`}
@@ -135,6 +123,6 @@ export function ProfessionalCard({ pro, featured = false }: ProfessionalCardProp
           </div>
         </div>
       </div>
-    </div>
+    </motion.article>
   );
 }

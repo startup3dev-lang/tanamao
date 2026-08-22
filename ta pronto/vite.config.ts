@@ -29,6 +29,7 @@ export default defineConfig({
     alias: {
       // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
+      'lucide-react': path.resolve(__dirname, './src/app/components/icons.tsx'),
     },
   },
 

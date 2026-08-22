@@ -1,6 +1,5 @@
-import { useRef } from 'react';
 import { useNavigate } from 'react-router';
-import gsap from 'gsap';
+import { motion } from 'motion/react';
 import { CategoryIcon } from './AppIcons';
 
 interface CategoryCardProps {
@@ -15,32 +14,13 @@ interface CategoryCardProps {
 
 export function CategoryCard({ category }: CategoryCardProps) {
   const navigate = useNavigate();
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseEnter = () => {
-    gsap.to(cardRef.current, { scale: 1.05, y: -3, duration: 0.2, ease: 'power2.out' });
-  };
-
-  const handleMouseLeave = () => {
-    gsap.to(cardRef.current, { scale: 1, y: 0, duration: 0.25, ease: 'power2.inOut' });
-  };
-
   const handleClick = () => {
-    gsap.to(cardRef.current, {
-      scale: 0.95,
-      duration: 0.1,
-      ease: 'power2.in',
-      onComplete: () => {
-        navigate(`/profissionais?categoria=${encodeURIComponent(category.name)}`);
-      },
-    });
+    navigate(`/profissionais?categoria=${encodeURIComponent(category.name)}`);
   };
 
   return (
-    <div
-      ref={cardRef}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <motion.div
+      whileHover={{ y: -4, scale: 1.015 }} whileTap={{ scale: 0.98 }}
       onClick={handleClick}
       className="relative cursor-pointer rounded-2xl border border-white/12 bg-white/[0.07] p-4 shadow-xl shadow-black/10 transition-all duration-300 hover:border-[#FFD100]/50 hover:bg-white/[0.10]"
     >
@@ -54,6 +34,6 @@ export function CategoryCard({ category }: CategoryCardProps) {
       </div>
       <h3 className="text-sm font-bold leading-tight text-white">{category.name}</h3>
       <p className="mt-0.5 text-xs text-white/45">{category.count} disponíveis</p>
-    </div>
+    </motion.div>
   );
 }

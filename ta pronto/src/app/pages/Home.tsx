@@ -103,8 +103,8 @@ export function Home() {
           </p>
 
           {/* Search box */}
-          <div className="hero-el bg-white rounded-2xl p-2 flex gap-2 max-w-xl mx-auto shadow-2xl mb-4" style={{ opacity: 0 }}>
-            <div className="flex-1 flex items-center gap-2 px-3">
+          <div className="hero-el mx-auto mb-4 flex max-w-xl flex-col gap-2 rounded-2xl bg-white p-2 shadow-2xl sm:flex-row" style={{ opacity: 0 }}>
+            <div className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2 sm:py-0">
               <Search size={18} className="text-gray-400 shrink-0" />
               <input
                 type="text"
@@ -112,12 +112,12 @@ export function Home() {
                 onChange={e => setSearchValue(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
                 placeholder="Digite seu endereço ou use sua localização atual"
-                className="flex-1 text-[#1A2A4A] text-sm outline-none placeholder-gray-400"
+                className="min-w-0 flex-1 text-sm text-[#1A2A4A] outline-none placeholder-gray-400"
               />
             </div>
             <button
               onClick={handleSearch}
-              className="bg-[#FFD100] text-[#0A1628] font-bold px-5 py-3 rounded-xl hover:bg-[#FFDE33] transition-colors shrink-0 text-sm"
+              className="w-full shrink-0 rounded-xl bg-[#FFD100] px-5 py-3 text-sm font-bold text-[#0A1628] transition-colors hover:bg-[#FFDE33] sm:w-auto"
             >
               Buscar profissionais
             </button>
