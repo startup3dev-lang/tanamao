@@ -11,6 +11,7 @@ export const categories = [
   { id: 10, name: 'Marceneiro', icon: 'marceneiro', count: 8, popular: false },
   { id: 11, name: 'Gesseiro', icon: 'gesseiro', count: 6, popular: false },
   { id: 12, name: 'Serviços Gerais', icon: 'gerais', count: 44, popular: true },
+  { id: 13, name: 'Mecânico', icon: 'gerais', count: 5, popular: true },
 ];
 
 export type Professional = {
@@ -37,7 +38,7 @@ export type Professional = {
   availability: string;
 };
 
-export const professionals: Professional[] = [
+const featuredProfessionals: Professional[] = [
   {
     id: 1,
     name: 'Marcos Oliveira',
@@ -177,6 +178,72 @@ export const professionals: Professional[] = [
     availability: 'Disponível hoje',
   },
 ];
+
+type ProfessionTemplate = {
+  category: string;
+  profession: string;
+  services: string[];
+  basePrice: number;
+  bio: string;
+};
+
+const professionTemplates: ProfessionTemplate[] = [
+  { category: 'Eletricista', profession: 'Eletricista', services: ['Instalação elétrica', 'Tomadas e interruptores', 'Chuveiro elétrico', 'Quadro de energia'], basePrice: 80, bio: 'Instalações e reparos elétricos residenciais com segurança e garantia.' },
+  { category: 'Encanador', profession: 'Encanador', services: ['Vazamentos', 'Desentupimento', 'Torneiras e registros', 'Instalação hidráulica'], basePrice: 90, bio: 'Reparos hidráulicos rápidos para residências e pequenos comércios.' },
+  { category: 'Pedreiro', profession: 'Pedreiro', services: ['Alvenaria', 'Assentamento de piso', 'Reboco', 'Pequenas reformas'], basePrice: 140, bio: 'Reformas, alvenaria e acabamentos executados com organização e qualidade.' },
+  { category: 'Pintor', profession: 'Pintor', services: ['Pintura interna', 'Pintura externa', 'Textura', 'Correção de paredes'], basePrice: 100, bio: 'Pintura residencial com preparação de superfície e acabamento profissional.' },
+  { category: 'Diarista', profession: 'Diarista', services: ['Limpeza geral', 'Limpeza pesada', 'Organização', 'Limpeza pós-obra'], basePrice: 120, bio: 'Limpeza residencial cuidadosa, pontual e adaptada à necessidade do cliente.' },
+  { category: 'Ar-condicionado', profession: 'Técnico de Ar-condicionado', services: ['Instalação', 'Higienização', 'Recarga de gás', 'Manutenção'], basePrice: 150, bio: 'Instalação e manutenção de aparelhos split e janela de várias marcas.' },
+  { category: 'Jardineiro', profession: 'Jardineiro', services: ['Poda', 'Manutenção de jardim', 'Plantio', 'Controle de pragas'], basePrice: 90, bio: 'Cuidados completos para jardins, quintais, vasos e áreas verdes.' },
+  { category: 'Montador de Móveis', profession: 'Montador de Móveis', services: ['Guarda-roupas', 'Armários', 'Camas', 'Desmontagem e montagem'], basePrice: 70, bio: 'Montagem cuidadosa de móveis residenciais de diferentes fabricantes.' },
+  { category: 'Chaveiro', profession: 'Chaveiro', services: ['Abertura de portas', 'Troca de fechadura', 'Cópia de chaves', 'Atendimento emergencial'], basePrice: 60, bio: 'Atendimento rápido para abertura, troca e instalação de fechaduras.' },
+  { category: 'Marceneiro', profession: 'Marceneiro', services: ['Móveis planejados', 'Reparos em madeira', 'Prateleiras', 'Ajuste de portas'], basePrice: 160, bio: 'Soluções sob medida e reparos em móveis e estruturas de madeira.' },
+  { category: 'Gesseiro', profession: 'Gesseiro', services: ['Forro de gesso', 'Sancas', 'Drywall', 'Reparos'], basePrice: 130, bio: 'Instalação e manutenção de gesso e drywall com acabamento limpo.' },
+  { category: 'Serviços Gerais', profession: 'Profissional de Serviços Gerais', services: ['Pequenos reparos', 'Instalações', 'Manutenção residencial', 'Marido de aluguel'], basePrice: 75, bio: 'Soluções práticas para diferentes manutenções e instalações residenciais.' },
+  { category: 'Mecânico', profession: 'Mecânico', services: ['Revisão automotiva', 'Freios', 'Suspensão', 'Troca de óleo', 'Diagnóstico mecânico'], basePrice: 120, bio: 'Manutenção automotiva preventiva e corretiva com diagnóstico transparente.' },
+];
+
+const firstNames = ['Lucas', 'Juliana', 'Rafael', 'Camila', 'André', 'Patrícia', 'Diego', 'Renata', 'Bruno', 'Larissa', 'Felipe', 'Aline', 'Gustavo'];
+const lastNames = ['Almeida', 'Souza', 'Rocha', 'Martins', 'Barbosa'];
+const colors = ['#2563EB', '#7C3AED', '#059669', '#DC2626', '#D97706'];
+
+const generatedProfessionals: Professional[] = professionTemplates.flatMap((template, templateIndex) => {
+  const existingCount = featuredProfessionals.filter(item => item.category === template.category).length;
+  return Array.from({ length: Math.max(0, 5 - existingCount) }, (_, index) => {
+    const slot = existingCount + index;
+    const firstName = firstNames[(templateIndex + slot) % firstNames.length];
+    const lastName = lastNames[slot % lastNames.length];
+    const rating = Number((4.5 + ((templateIndex + slot) % 5) * 0.1).toFixed(1));
+    const distanceValue = 0.7 + ((templateIndex * 3 + slot * 7) % 40) / 10;
+    const price = template.basePrice + slot * 10;
+
+    return {
+      id: 100 + templateIndex * 10 + slot,
+      name: `${firstName} ${lastName}`,
+      profession: template.profession,
+      rating,
+      reviews: 38 + templateIndex * 17 + slot * 29,
+      distance: `${distanceValue.toFixed(1)} km`,
+      eta: `${10 + ((templateIndex + slot) % 8) * 5} min`,
+      completedJobs: 120 + templateIndex * 83 + slot * 97,
+      price: `A partir de R$ ${price}`,
+      priceRange: `R$ ${price} – R$ ${price + 280}`,
+      available: slot !== 4,
+      badge: slot === 0 ? 'Disponível agora' : slot === 1 ? 'Melhor avaliado' : 'Profissional verificado',
+      verified: slot !== 3,
+      initials: `${firstName[0]}${lastName[0]}`,
+      color: colors[slot % colors.length],
+      discount: slot === 2 ? '10% OFF' : null,
+      category: template.category,
+      bio: template.bio,
+      services: template.services,
+      responseTime: `~${5 + slot * 3} min`,
+      availability: slot === 4 ? 'Disponível amanhã' : 'Disponível hoje',
+    };
+  });
+});
+
+export const professionals: Professional[] = [...featuredProfessionals, ...generatedProfessionals];
 
 export const searchSuggestions = [
   'Consertar vazamento',

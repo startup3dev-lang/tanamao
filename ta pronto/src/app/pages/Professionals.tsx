@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
 import gsap from 'gsap';
@@ -17,6 +17,12 @@ const filters = [
   { id: 'verificados', label: 'Verificados' },
 ];
 
+const normalize = (value: string) => value
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLocaleLowerCase('pt-BR')
+  .trim();
+
 export function Professionals() {
   const [searchParams] = useSearchParams();
   const initialCat = searchParams.get('categoria') || '';
@@ -27,12 +33,22 @@ export function Professionals() {
   const { location, setShowLocationModal } = useApp();
   const cardsRef = useRef<HTMLDivElement>(null);
 
-  const filtered = professionals.filter(p => {
-    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.profession.toLowerCase().includes(search.toLowerCase());
-    const matchCat = !selectedCat || p.category === selectedCat;
-    const matchFilter = activeFilter === 'disponiveis' ? p.available : activeFilter === 'desconto' ? !!p.discount : activeFilter === 'verificados' ? p.verified : true;
-    return matchSearch && matchCat && matchFilter;
-  });
+  const filtered = useMemo(() => {
+    const term = normalize(search);
+    const results = professionals.filter(p => {
+      const searchable = normalize([p.name, p.profession, p.category, p.bio, ...p.services].join(' '));
+      const matchSearch = !term || searchable.includes(term);
+      const matchCat = !selectedCat || p.category === selectedCat;
+      const matchFilter = activeFilter === 'disponiveis' ? p.available : activeFilter === 'desconto' ? !!p.discount : activeFilter === 'verificados' ? p.verified : true;
+      return matchSearch && matchCat && matchFilter;
+    });
+
+    return results.sort((a, b) => {
+      if (activeFilter === 'avaliados') return b.rating - a.rating || b.reviews - a.reviews;
+      if (activeFilter === 'preco') return Number(a.price.match(/\d+/)?.[0] ?? 0) - Number(b.price.match(/\d+/)?.[0] ?? 0);
+      return Number.parseFloat(a.distance) - Number.parseFloat(b.distance);
+    });
+  }, [activeFilter, search, selectedCat]);
 
   useEffect(() => {
     if (!cardsRef.current) return;
