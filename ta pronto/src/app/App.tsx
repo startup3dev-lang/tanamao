@@ -5,6 +5,7 @@ import { Header } from './components/Header';
 import { MobileNav } from './components/MobileNav';
 import { LocationModal } from './components/LocationModal';
 import { LoginModal } from './components/LoginModal';
+import { LoadingScreen } from './components/LoadingScreen';
 
 const Home = lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
 const Categories = lazy(() => import('./pages/Categories').then(module => ({ default: module.Categories })));
@@ -32,7 +33,7 @@ function AppRoutes() {
       <Header />
       <LocationModal />
       <LoginModal />
-      <Suspense fallback={<div className="grid min-h-[70vh] place-items-center pt-16 text-sm font-medium text-black/45">Carregando…</div>}><Routes>
+      <Suspense fallback={<LoadingScreen />}><Routes>
         <Route path="/" element={<Home />} />
         <Route path="/categorias" element={<Categories />} />
         <Route path="/profissionais" element={<Professionals />} />

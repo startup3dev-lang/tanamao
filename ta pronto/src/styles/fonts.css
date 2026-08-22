@@ -1,1 +1,3 @@
-:root { --font-sans: 'Neue Montreal', 'Helvetica Neue', Arial, system-ui, sans-serif; }
+@import '@fontsource-variable/instrument-sans';
+
+:root { --font-sans: 'Instrument Sans Variable', 'Helvetica Neue', Arial, system-ui, sans-serif; }
