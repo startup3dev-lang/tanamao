@@ -6,4 +6,4 @@ const normalizeLocation = (value: string) => value
   .toLocaleLowerCase('pt-BR');
 
 export const isLocationSupported = (location: string) =>
-  normalizeLocation(location).includes('teresina');
+  /(?:^|[,\s])teresina(?:\s*-\s*pi)?$/.test(normalizeLocation(location).trim());

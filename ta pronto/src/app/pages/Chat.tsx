@@ -1,127 +1,50 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
-import { ChevronLeft, Send, Image, MapPin, X } from 'lucide-react';
-import gsap from 'gsap';
-import { PageTransition } from '../components/PageTransition';
+import { useNavigate, useParams } from 'react-router';
+import { api, post } from '../api/client';
+import type { Message } from '../api/types';
 import { useApp } from '../context/AppContext';
 
-type Message = { id: number; from: 'user' | 'pro'; text: string; time: string };
-
-const initialMessages: Message[] = [
-  { id: 1, from: 'pro', text: 'Olá! Vi sua solicitação. Posso passar hoje às 15h, tudo bem?', time: '14:22' },
-  { id: 2, from: 'user', text: 'Oi! Sim, pode ser. Vou estar em casa.', time: '14:25' },
-  { id: 3, from: 'pro', text: 'Ótimo! Vou levar o material necessário. Pode me confirmar o endereço completo?', time: '14:26' },
-];
-
 export function Chat() {
+  const { id } = useParams();
+  const { user } = useApp();
   const navigate = useNavigate();
-  const { selectedProfessional } = useApp();
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const pro = selectedProfessional;
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const end = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (!id || !user) return;
+    let active = true;
+    const load = () => api<{ messages: Message[] }>(`/conversations/${id}/messages`)
+      .then(result => { if (active) { setMessages(result.messages); setError(''); } })
+      .catch(cause => { if (active) setError(cause.message); });
+    load();
+    const timer = window.setInterval(load, 5000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [id, user?.id]);
+  useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages.length]);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    const newMsg: Message = { id: Date.now(), from: 'user', text: input.trim(), time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
-    setMessages(prev => [...prev, newMsg]);
-    setInput('');
-
-    // Simulate pro reply
-    setTimeout(() => {
-      const replies = ['Entendido!', 'Ok, anotei.', 'Perfeito, até logo!', 'Pode deixar, cuido disso.'];
-      const reply: Message = { id: Date.now() + 1, from: 'pro', text: replies[Math.floor(Math.random() * replies.length)], time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
-      setMessages(prev => [...prev, reply]);
-    }, 1200);
+  const send = async () => {
+    if (!id || !input.trim() || busy) return;
+    setBusy(true);
+    try {
+      const result = await post<{ message: Message }>(`/conversations/${id}/messages`, { body: input.trim() });
+      setMessages(previous => [...previous, result.message]);
+      setInput(''); setError('');
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Mensagem não enviada'); }
+    finally { setBusy(false); }
   };
 
-  return (
-    <PageTransition>
-      <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#0A1628] pt-16">
-        {/* Chat header */}
-        <div className="bg-[#0D1F3C] border-b border-white/10 py-3 px-4 shrink-0">
-          <div className="max-w-2xl mx-auto flex items-center gap-3">
-            <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-              <ChevronLeft size={20} className="text-white" />
-            </button>
-            {pro && (
-              <>
-                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: pro.color }}>
-                  {pro.initials}
-                </div>
-                <div>
-                  <p className="text-white font-semibold text-sm">{pro.name}</p>
-                  <p className="flex items-center gap-1.5 text-green-400 text-xs">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> Online · Responde rápido
-                  </p>
-                </div>
-              </>
-            )}
-            <button onClick={() => navigate('/acompanhamento')} className="ml-auto bg-[#FFD100]/10 border border-[#FFD100]/30 text-[#FFD100] text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#FFD100]/20 transition-colors">
-              Fechar serviço
-            </button>
-          </div>
-        </div>
-
-        {/* Service summary card */}
-        <div className="max-w-2xl mx-auto w-full px-4 pt-3 shrink-0">
-          <div className="bg-[#0D1F3C] border border-white/10 rounded-xl px-4 py-2.5 flex items-center justify-between">
-            <p className="text-white/60 text-xs">Solicitação: <span className="text-white font-semibold">Instalação elétrica</span></p>
-            <button onClick={() => navigate('/acompanhamento')} className="text-[#FFD100] text-xs underline">Ver status</button>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
-          <div className="max-w-2xl mx-auto space-y-3">
-            {messages.map(msg => (
-              <div key={msg.id} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
-                  msg.from === 'user'
-                    ? 'bg-[#FFD100] text-[#0A1628] rounded-tr-sm'
-                    : 'bg-white text-[#1A2A4A] rounded-tl-sm shadow-sm'
-                }`}>
-                  <p>{msg.text}</p>
-                  <p className={`text-xs mt-1 ${msg.from === 'user' ? 'text-[#0A1628]/50' : 'text-gray-400'}`}>{msg.time}</p>
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-
-        {/* Input */}
-        <div className="shrink-0 border-t border-white/10 bg-[#0D1F3C] px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4">
-          <div className="max-w-2xl mx-auto flex items-center gap-2">
-            <button className="p-2 text-white/40 hover:text-white transition-colors">
-              <Image size={20} />
-            </button>
-            <button className="p-2 text-white/40 hover:text-white transition-colors">
-              <MapPin size={20} />
-            </button>
-            <div className="flex min-w-0 flex-1 items-center rounded-2xl border border-white/20 bg-white/10 px-4 py-2">
-              <input
-                type="text"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                placeholder="Escreva uma mensagem..."
-                className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder-white/40"
-              />
-            </div>
-            <button
-              onClick={sendMessage}
-              className="w-9 h-9 bg-[#FFD100] rounded-full flex items-center justify-center hover:bg-[#FFDE33] transition-colors shrink-0"
-            >
-              <Send size={15} className="text-[#0A1628]" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </PageTransition>
-  );
+  if (!id) return <main className="min-h-screen bg-[#0A1628] pt-28 text-center text-white"><p>Escolha uma conversa.</p><button onClick={() => navigate('/chats')} className="mt-4 text-[#FFD100]">Ver conversas</button></main>;
+  return <main className="flex h-[100dvh] flex-col bg-[#0A1628] pt-16 text-white">
+    <header className="border-b border-white/10 bg-[#0D1F3C] p-4"><button onClick={() => navigate('/chats')} className="text-[#FFD100]">← Conversas</button></header>
+    <div className="flex-1 space-y-3 overflow-y-auto p-4"><div className="mx-auto max-w-2xl space-y-3">
+      {messages.map(message => <div key={message.id} className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${message.sender_id === user?.id ? 'bg-[#FFD100] text-[#0A1628]' : 'bg-white text-[#0A1628]'}`}><p>{message.body}</p><time className="text-xs opacity-60">{new Date(message.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</time></div></div>)}
+      <div ref={end} />
+    </div></div>
+    {error && <p role="alert" className="px-4 text-center text-red-300">{error}</p>}
+    <div className="border-t border-white/10 bg-[#0D1F3C] p-3"><div className="mx-auto flex max-w-2xl gap-2"><input value={input} onChange={event => setInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') send(); }} placeholder="Escreva uma mensagem" className="min-w-0 flex-1 rounded-xl bg-white/10 p-3 text-white outline-none" /><button disabled={busy || !input.trim()} onClick={send} className="rounded-xl bg-[#FFD100] px-5 font-bold text-[#0A1628] disabled:opacity-50">Enviar</button></div></div>
+  </main>;
 }

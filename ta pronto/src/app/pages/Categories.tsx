@@ -1,11 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
-import { categories } from '../data/mockData';
+import { useNavigate } from 'react-router';
+import { useApp } from '../context/AppContext';
 import { PageTransition } from '../components/PageTransition';
 import { CategoryIcon } from '../components/AppIcons';
 
 export function Categories() {
+  const { categories, catalogError } = useApp();
+  const navigate = useNavigate();
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,10 +30,11 @@ export function Categories() {
         </div>
 
         <div className="mx-auto max-w-5xl px-4 py-8">
+          {catalogError && <p role="alert" className="mb-4 text-red-300">{catalogError}</p>}
           <div ref={gridRef} className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
             {categories.map(cat => (
               <div key={cat.id} className="cat-grid-card" style={{ opacity: 0 }}>
-                <div className="group cursor-pointer rounded-2xl border border-white/12 bg-white/[0.07] p-5 shadow-xl shadow-black/10 transition-all duration-300 hover:border-[#FFD100]/50 hover:bg-white/[0.10]">
+                <button onClick={() => navigate(`/profissionais?categoria=${encodeURIComponent(cat.name)}`)} className="group w-full cursor-pointer rounded-2xl border border-white/12 bg-white/[0.07] p-5 text-left shadow-xl shadow-black/10 transition-all duration-300 hover:border-[#FFD100]/50 hover:bg-white/[0.10]">
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FFD100]/10">
                     <CategoryIcon name={cat.icon} size={30} />
                   </div>
@@ -46,7 +50,7 @@ export function Categories() {
                       Ver profissionais <ArrowRight size={13} />
                     </span>
                   </div>
-                </div>
+                </button>
               </div>
             ))}
           </div>

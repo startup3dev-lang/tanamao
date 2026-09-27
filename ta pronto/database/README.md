@@ -2,6 +2,8 @@
 
 Modelo base para PostgreSQL 15+, derivado do DER de marketplace de serviços e dos fluxos existentes no frontend.
 
+As migrations `002_application.sql` e `003_future_subscriptions.sql` acrescentam autenticação, pedidos direcionados e a estrutura para assinaturas futuras. Cobranças e repasses estão inativos nesta fase; o cadastro de prestadores é gratuito. A monetização inicial prevista é Google AdSense.
+
 ## Domínios
 
 - Identidade: `app_users`, `user_roles` e `addresses`.
@@ -19,7 +21,7 @@ Modelo base para PostgreSQL 15+, derivado do DER de marketplace de serviços e d
 3. Prestadores compatíveis enviam `quotes`.
 4. A proposta aceita gera um `job` e uma `conversation`.
 5. Cada mudança é registrada em `job_status_history`.
-6. O pagamento gera um `payment`; o valor do prestador segue para `payouts`.
+6. Nesta fase, o serviço é executado sem pagamento pela plataforma. As tabelas `payments` e `payouts` estão reservadas para uma integração futura.
 7. Após a conclusão, o cliente pode criar uma única `review` para o serviço.
 
 ## Relações principais
@@ -47,8 +49,8 @@ erDiagram
 ## Aplicação
 
 ```bash
-psql "$DATABASE_URL" -f database/migrations/001_initial_schema.sql
-psql "$DATABASE_URL" -f database/seed.sql
+npm run db:migrate
+npm run db:seed
 ```
 
 ## Decisões importantes

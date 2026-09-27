@@ -3,16 +3,16 @@ import { useNavigate } from 'react-router';
 import { MapPin, Search, ArrowRight, Star, Navigation, CheckCircle, Zap, Shield, Clock, Tag } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { categories, professionals } from '../data/mockData';
 import { CategoryCard } from '../components/CategoryCard';
 import { ProfessionalCard } from '../components/ProfessionalCard';
 import { useApp } from '../context/AppContext';
+import { isLocationSupported } from '../utils/serviceArea';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export function Home() {
   const navigate = useNavigate();
-  const { location, setShowLocationModal } = useApp();
+  const { location, setShowLocationModal, categories, professionals, catalogError } = useApp();
   const [searchValue, setSearchValue] = useState('');
   const heroRef = useRef<HTMLElement>(null);
   const categoriesRef = useRef<HTMLDivElement>(null);
@@ -75,11 +75,12 @@ export function Home() {
     }
   };
 
-  const availablePros = professionals.filter(p => p.available);
+  const availablePros = isLocationSupported(location) ? professionals.filter(p => p.available) : [];
   const discountPros = professionals.filter(p => p.discount);
 
   return (
     <div className="min-h-screen bg-[#0A1628]">
+      {catalogError && <p role="alert" className="bg-red-900 px-4 py-3 text-center text-white">Catálogo indisponível: {catalogError}</p>}
       {/* HERO */}
       <section ref={heroRef} className="relative pt-28 pb-16 px-4 overflow-hidden">
         {/* Background pattern */}
@@ -90,7 +91,7 @@ export function Home() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="hero-el inline-flex items-center gap-2 bg-[#FFD100]/10 border border-[#FFD100]/30 text-[#FFD100] text-sm font-semibold px-4 py-2 rounded-full mb-6" style={{ opacity: 0 }}>
             <Zap size={14} fill="#FFD100" />
-            Profissionais verificados e disponíveis agora
+            Encontre profissionais em Teresina
           </div>
 
           <h1 className="hero-el text-white font-black leading-tight mb-4" style={{ opacity: 0, fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
@@ -139,24 +140,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* STATS */}
-      <section className="stats-section bg-[#0D1F3C] py-8 border-t border-white/5">
-        <div className="max-w-5xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {[
-              { value: '47.000+', label: 'Profissionais' },
-              { value: '4.8/5', label: 'Avaliação média' },
-              { value: '98%', label: 'Satisfação' },
-              { value: '15 min', label: 'Tempo médio' },
-            ].map((s, i) => (
-              <div key={i} className="stat-el" style={{ opacity: 0 }}>
-                <div className="text-[#FFD100] font-black text-2xl">{s.value}</div>
-                <div className="text-white/50 text-sm mt-0.5">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CATEGORIES */}
       <section className="py-14 px-4">
@@ -190,8 +173,8 @@ export function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-white font-black text-2xl">Profissionais próximos</h2>
-              <p className="text-white/50 text-sm mt-1">Disponíveis agora perto de você</p>
+              <h2 className="text-white font-black text-2xl">Profissionais disponíveis</h2>
+              <p className="text-white/50 text-sm mt-1">Prestadores cadastrados em Teresina</p>
             </div>
             <button onClick={() => navigate('/profissionais')} className="hidden sm:flex items-center gap-1.5 text-[#FFD100] text-sm font-semibold hover:gap-2.5 transition-all">
               Ver todos <ArrowRight size={16} />
@@ -208,7 +191,7 @@ export function Home() {
       </section>
 
       {/* DISCOUNTS */}
-      <section className="py-10 px-4">
+      {discountPros.length > 0 && <section className="py-10 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
@@ -225,7 +208,7 @@ export function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* HOW IT WORKS */}
       <section id="como-funciona" className="py-14 px-4 bg-[#0D1F3C]">
@@ -236,9 +219,9 @@ export function Home() {
           </div>
           <div ref={stepsRef} className="grid md:grid-cols-3 gap-6">
             {[
-              { step: '01', icon: <MapPin size={28} className="text-[#FFD100]" />, title: 'Informe sua localização', desc: 'Digite seu endereço ou use a localização automática para encontrar profissionais próximos.' },
-              { step: '02', icon: <Search size={28} className="text-[#FFD100]" />, title: 'Escolha o profissional', desc: 'Compare avaliações, preços e disponibilidade. Veja perfis completos e portfólios.' },
-              { step: '03', icon: <CheckCircle size={28} className="text-[#FFD100]" />, title: 'Agende ou solicite', desc: 'Solicite orçamento, converse no chat e acompanhe o serviço em tempo real.' },
+              { step: '01', icon: <MapPin size={28} className="text-[#FFD100]" />, title: 'Informe sua localização', desc: 'Digite sua cidade ou use a localização automática.' },
+              { step: '02', icon: <Search size={28} className="text-[#FFD100]" />, title: 'Escolha o profissional', desc: 'Compare serviços, avaliações e preços iniciais.' },
+              { step: '03', icon: <CheckCircle size={28} className="text-[#FFD100]" />, title: 'Solicite orçamento', desc: 'Envie seu pedido, converse com o profissional e acompanhe o serviço.' },
             ].map((item, i) => (
               <div key={i} className="step-el bg-[#0A1628] rounded-2xl p-6 border border-white/10 relative" style={{ opacity: 0 }}>
                 <div className="absolute top-4 right-4 text-white/10 font-black text-4xl">{item.step}</div>
@@ -259,9 +242,9 @@ export function Home() {
           <h2 className="text-white font-black text-2xl text-center mb-10">Por que escolher o TA PRONTO?</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-5">
             {[
-              { icon: <Shield size={22} className="text-[#FFD100]" />, title: 'Profissionais verificados', desc: 'Todos passam por análise de documentos e histórico.' },
+              { icon: <Shield size={22} className="text-[#FFD100]" />, title: 'Perfis analisados', desc: 'A equipe aprova o perfil antes de sua publicação.' },
               { icon: <Star size={22} className="text-[#FFD100]" fill="#FFD100" />, title: 'Avaliações reais', desc: 'Avaliações de clientes reais após cada serviço concluído.' },
-              { icon: <Clock size={22} className="text-[#FFD100]" />, title: 'Atendimento rápido', desc: 'Profissionais disponíveis agora com resposta em minutos.' },
+              { icon: <Clock size={22} className="text-[#FFD100]" />, title: 'Contato direto', desc: 'Converse com o profissional sobre seu pedido.' },
             ].map((item, i) => (
               <div key={i} className="bg-[#0D1F3C] rounded-2xl p-5 border border-white/10">
                 <div className="w-10 h-10 bg-[#FFD100]/10 rounded-xl flex items-center justify-center mb-3">
@@ -279,7 +262,7 @@ export function Home() {
       <section className="py-14 px-4 bg-[#FFD100]">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-[#0A1628] font-black text-2xl mb-3">É profissional? Ganhe mais com o TA PRONTO</h2>
-          <p className="text-[#0A1628]/70 mb-6">Receba pedidos de clientes próximos, defina sua agenda e aumente sua renda.</p>
+          <p className="text-[#0A1628]/70 mb-6">Cadastre seu serviço gratuitamente e receba pedidos de clientes.</p>
           <button
             onClick={() => navigate('/cadastro-profissional')}
             className="bg-[#0A1628] text-white font-bold px-8 py-3.5 rounded-2xl hover:bg-[#0D1F3C] transition-colors text-sm"
@@ -299,7 +282,7 @@ export function Home() {
               </div>
               <span className="text-white font-black text-lg">TA PRONTO</span>
             </div>
-            <p className="text-white/30 text-sm">2026 TA PRONTO. Todos os direitos reservados.</p>
+            <div className="flex flex-wrap items-center gap-4"><button onClick={() => navigate('/privacidade')} className="text-sm text-white/60 underline">Política de Privacidade</button><p className="text-white/30 text-sm">2026 TA PRONTO. Todos os direitos reservados.</p></div>
           </div>
         </div>
       </footer>

@@ -2,20 +2,18 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
 import gsap from 'gsap';
-import { professionals, categories } from '../data/mockData';
 import { ProfessionalCard } from '../components/ProfessionalCard';
 import { PageTransition } from '../components/PageTransition';
-import { useApp } from '../context/AppContext';
+import { adaptProvider, useApp, type ProviderRow } from '../context/AppContext';
+import type { Professional } from '../api/professional';
+import { api } from '../api/client';
 import { CategoryIcon, BadgeIcon } from '../components/AppIcons';
 import { isLocationSupported } from '../utils/serviceArea';
 
 const filters = [
-  { id: 'proximos', label: 'Mais próximos' },
   { id: 'avaliados', label: 'Melhor avaliados' },
   { id: 'disponiveis', label: 'Disponíveis agora' },
-  { id: 'desconto', label: 'Com desconto' },
   { id: 'preco', label: 'Menor preço' },
-  { id: 'verificados', label: 'Verificados' },
 ];
 
 const normalize = (value: string) => value
@@ -29,28 +27,49 @@ export function Professionals() {
   const initialCat = searchParams.get('categoria') || '';
   const initialSearch = searchParams.get('busca') || '';
   const [search, setSearch] = useState(initialSearch);
-  const [activeFilter, setActiveFilter] = useState('proximos');
+  const [activeFilter, setActiveFilter] = useState('avaliados');
   const [selectedCat, setSelectedCat] = useState(initialCat);
-  const { location, setShowLocationModal } = useApp();
+  const [queryProviders, setQueryProviders] = useState<Professional[] | null>(null);
+  const [searchError, setSearchError] = useState('');
+  const { location, setShowLocationModal, professionals, categories, catalogError, catalogLoading } = useApp();
   const hasCoverage = isLocationSupported(location);
   const cardsRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (!search.trim() && !selectedCat) { setQueryProviders(null); setSearchError(''); return; }
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      const params = new URLSearchParams();
+      if (search.trim()) params.set('search', search.trim());
+      const categoryId = categories.find(category => category.name === selectedCat)?.id;
+      if (categoryId) params.set('category', categoryId);
+      try {
+        const result = await api<{ providers: ProviderRow[] }>(`/providers?${params}`, { signal: controller.signal });
+        setQueryProviders(result.providers.map(adaptProvider));
+        setSearchError('');
+      } catch (cause) {
+        if (!controller.signal.aborted) setSearchError(cause instanceof Error ? cause.message : 'Busca indisponível');
+      }
+    }, 250);
+    return () => { controller.abort(); window.clearTimeout(timer); };
+  }, [search, selectedCat, categories]);
+
   const filtered = useMemo(() => {
     const term = normalize(search);
-    const results = professionals.filter(p => {
-      const searchable = normalize([p.name, p.profession, p.category, p.bio, ...p.services].join(' '));
+    const results = (queryProviders || professionals).filter(p => {
+      const searchable = normalize([p.name, p.profession, p.category, p.bio, ...p.services, ...p.serviceTags].join(' '));
       const matchSearch = !term || searchable.includes(term);
       const matchCat = !selectedCat || p.category === selectedCat;
-      const matchFilter = activeFilter === 'disponiveis' ? p.available : activeFilter === 'desconto' ? !!p.discount : activeFilter === 'verificados' ? p.verified : true;
+      const matchFilter = activeFilter === 'disponiveis' ? p.available : true;
       return matchSearch && matchCat && matchFilter;
     });
 
     return results.sort((a, b) => {
       if (activeFilter === 'avaliados') return b.rating - a.rating || b.reviews - a.reviews;
       if (activeFilter === 'preco') return Number(a.price.match(/\d+/)?.[0] ?? 0) - Number(b.price.match(/\d+/)?.[0] ?? 0);
-      return Number.parseFloat(a.distance) - Number.parseFloat(b.distance);
+      return b.rating - a.rating;
     });
-  }, [activeFilter, search, selectedCat]);
+  }, [professionals, queryProviders, activeFilter, search, selectedCat]);
 
   useEffect(() => {
     if (!cardsRef.current) return;
@@ -132,6 +151,9 @@ export function Professionals() {
         </div>
 
         <div className="max-w-6xl mx-auto px-4 py-6">
+          {catalogLoading && <p className="text-white/70">Carregando profissionais...</p>}
+          {catalogError && <p role="alert" className="text-red-300">{catalogError}</p>}
+          {searchError && <p role="alert" className="text-red-300">{searchError}</p>}
           <div className="flex items-center justify-between mb-4">
             <p className="text-white/50 text-sm">
               <span className="text-white font-semibold">{hasCoverage ? filtered.length : 0}</span> profissionais encontrados
@@ -166,7 +188,7 @@ export function Professionals() {
             <div ref={cardsRef} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filtered.map((pro, i) => (
                 <div key={pro.id} className="pro-list-card" style={{ opacity: 0 }}>
-                  <ProfessionalCard pro={pro} featured={i === 0 && activeFilter === 'proximos'} />
+                  <ProfessionalCard pro={pro} featured={i === 0 && activeFilter === 'avaliados'} />
                 </div>
               ))}
             </div>

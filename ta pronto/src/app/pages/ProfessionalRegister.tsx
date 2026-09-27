@@ -1,192 +1,74 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ChevronLeft, Zap, MapPin, Clock, Star, TrendingUp, CheckCircle } from 'lucide-react';
-import gsap from 'gsap';
-import { categories } from '../data/mockData';
-import { PageTransition } from '../components/PageTransition';
-import { CategoryIcon } from '../components/AppIcons';
-
-const steps = ['Dados pessoais', 'Serviços', 'Disponibilidade', 'Confirmação'];
+import { post } from '../api/client';
+import { useApp } from '../context/AppContext';
+import { ServiceTagsInput } from '../components/ServiceTagsInput';
 
 export function ProfessionalRegister() {
+  const { categories, user, setShowLoginModal } = useApp();
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState({
-    name: '', phone: '', city: '', profession: '', experience: '', price: '',
-  });
-  const formRef = useRef<HTMLDivElement>(null);
+  const [publicName, setPublicName] = useState('');
+  const [bio, setBio] = useState('');
+  const [serviceId, setServiceId] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [startingPrice, setStartingPrice] = useState('');
+  const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('Teresina');
+  const [yearsExperience, setYearsExperience] = useState('0');
+  const [weekdays, setWeekdays] = useState<number[]>([]);
+  const [startsAt, setStartsAt] = useState('08:00');
+  const [endsAt, setEndsAt] = useState('18:00');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
-  const handleNext = () => {
-    if (step < steps.length - 1) {
-      gsap.to(formRef.current, { opacity: 0, x: -30, duration: 0.25, ease: 'power2.in', onComplete: () => {
-        setStep(s => s + 1);
-        gsap.fromTo(formRef.current, { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.3, ease: 'power2.out' });
-      }});
-    }
+  const missing = [
+    !publicName.trim() && 'Informe o nome público.',
+    !serviceId && 'Selecione uma categoria.',
+    tags.length === 0 && 'Adicione ao menos um serviço específico.',
+    !bio.trim() && 'Descreva seu trabalho.',
+    !/^\d{10,11}$/.test(phone.replace(/\D/g, '')) && 'Informe um telefone com DDD e 10 ou 11 dígitos.',
+    city.trim().toLocaleLowerCase('pt-BR') !== 'teresina' && 'Nesta etapa, a cidade deve ser Teresina.',
+    (!Number.isInteger(Number(yearsExperience)) || Number(yearsExperience) < 0 || Number(yearsExperience) > 70) && 'Informe a experiência entre 0 e 70 anos.',
+    (startingPrice.trim() === '' || Number(startingPrice) < 0 || Number(startingPrice) > 1_000_000) && 'Informe um preço inicial válido.',
+    weekdays.length === 0 && 'Selecione ao menos um dia de atendimento.',
+    startsAt >= endsAt && 'O horário final deve ser depois do inicial.',
+  ].filter((item): item is string => typeof item === 'string');
+
+  const submit = async () => {
+    setAttempted(true);
+    if (missing.length) return;
+    if (!user) { setShowLoginModal(true); return; }
+    setBusy(true); setError('');
+    try {
+      await post('/providers/apply', { publicName, bio, serviceId, tags, startingPrice: Number(startingPrice),
+        phone: phone.replace(/\D/g, ''), city, yearsExperience: Number(yearsExperience), weekdays, startsAt, endsAt });
+      setDone(true);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Cadastro não enviado'); }
+    finally { setBusy(false); }
   };
 
-  return (
-    <PageTransition>
-      <div className="min-h-screen bg-[#0A1628] pt-16 pb-8">
-        {/* Header */}
-        <div className="bg-[#FFD100] py-8 px-4">
-          <div className="max-w-2xl mx-auto">
-            <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-[#0A1628]/60 text-sm mb-4 hover:text-[#0A1628] transition-colors">
-              <ChevronLeft size={16} /> Voltar
-            </button>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-[#0A1628] rounded-2xl flex items-center justify-center">
-                <Zap size={22} className="text-[#FFD100]" fill="#FFD100" />
-              </div>
-              <div>
-                <h1 className="text-[#0A1628] font-black text-xl">Seja um profissional</h1>
-                <p className="text-[#0A1628]/70 text-sm">Ganhe dinheiro oferecendo seus serviços no TA PRONTO</p>
-              </div>
-            </div>
-
-            {/* Benefits */}
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { icon: <MapPin size={14} />, text: 'Receba pedidos próximos' },
-                { icon: <Clock size={14} />, text: 'Defina sua agenda' },
-                { icon: <TrendingUp size={14} />, text: 'Mais visibilidade' },
-                { icon: <Star size={14} />, text: 'Avaliações dos clientes' },
-              ].map((b, i) => (
-                <div key={i} className="flex items-center gap-1.5 bg-[#0A1628]/10 px-3 py-2 rounded-xl">
-                  <span className="text-[#0A1628]">{b.icon}</span>
-                  <span className="text-[#0A1628] text-xs font-semibold">{b.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="max-w-2xl mx-auto px-4 py-6">
-          {/* Progress */}
-          <div className="flex items-center gap-2 mb-6">
-            {steps.map((s, i) => (
-              <div key={i} className="flex-1">
-                <div className={`h-1.5 rounded-full transition-all duration-300 ${i <= step ? 'bg-[#FFD100]' : 'bg-white/20'}`} />
-                <p className={`text-xs mt-1 font-medium ${i === step ? 'text-[#FFD100]' : 'text-white/30'}`}>{s}</p>
-              </div>
-            ))}
-          </div>
-
-          <div ref={formRef}>
-            {step === 0 && (
-              <div className="space-y-4">
-                <h2 className="text-white font-bold text-lg">Dados pessoais</h2>
-                {[
-                  { label: 'Nome completo', key: 'name', placeholder: 'Seu nome completo' },
-                  { label: 'Telefone', key: 'phone', placeholder: '(11) 99999-9999' },
-                  { label: 'Cidade', key: 'city', placeholder: 'Sua cidade' },
-                ].map(field => (
-                  <div key={field.key}>
-                    <label className="text-white/60 text-sm font-medium block mb-1">{field.label}</label>
-                    <input
-                      type="text"
-                      value={form[field.key as keyof typeof form]}
-                      onChange={e => setForm(f => ({ ...f, [field.key]: e.target.value }))}
-                      placeholder={field.placeholder}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:border-[#FFD100] transition-colors"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {step === 1 && (
-              <div className="space-y-4">
-                <h2 className="text-white font-bold text-lg">Seus serviços</h2>
-                <div>
-                  <label className="text-white/60 text-sm font-medium block mb-2">Profissão principal</label>
-                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
-                    {categories.map(cat => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setForm(f => ({ ...f, profession: cat.name }))}
-                        className={`flex items-center gap-2 p-3 rounded-xl border-2 text-left transition-all ${
-                          form.profession === cat.name
-                            ? 'border-[#FFD100] bg-[#FFD100]/10 text-white'
-                            : 'border-white/20 bg-white/5 text-white/70 hover:border-white/40'
-                        }`}
-                      >
-                        <CategoryIcon name={cat.icon} size={18} className={form.profession === cat.name ? 'text-[#FFD100]' : 'text-white/55'} />
-                        <span className="text-sm font-medium">{cat.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-white/60 text-sm font-medium block mb-1">Preço inicial</label>
-                  <input
-                    type="text"
-                    value={form.price}
-                    onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-                    placeholder="Ex: R$ 80"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:border-[#FFD100] transition-colors"
-                  />
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-4">
-                <h2 className="text-white font-bold text-lg">Disponibilidade</h2>
-                <p className="text-white/50 text-sm">Escolha os dias em que você estará disponível para atender.</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(day => (
-                    <button
-                      key={day}
-                      className="p-3 rounded-xl border-2 border-white/20 bg-white/5 text-white/70 text-sm font-medium hover:border-[#FFD100] hover:text-white transition-colors"
-                    >
-                      {day}
-                    </button>
-                  ))}
-                </div>
-                <div>
-                  <label className="text-white/60 text-sm font-medium block mb-2">Experiência</label>
-                  <textarea
-                    value={form.experience}
-                    onChange={e => setForm(f => ({ ...f, experience: e.target.value }))}
-                    placeholder="Conte sobre sua experiência profissional..."
-                    className="w-full h-24 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm resize-none focus:outline-none focus:border-[#FFD100] transition-colors"
-                  />
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="text-center py-8 space-y-4">
-                <div className="w-20 h-20 bg-[#FFD100] rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle size={36} className="text-[#0A1628]" />
-                </div>
-                <h2 className="text-white font-black text-2xl">Quase lá!</h2>
-                <p className="text-white/60 text-sm max-w-xs mx-auto">
-                  Seu cadastro foi recebido. Nossa equipe irá analisar seu perfil e você será notificado em até 24 horas.
-                </p>
-                <div className="bg-[#0D1F3C] rounded-2xl p-4 text-left border border-white/10">
-                  <p className="text-white font-semibold">{form.name || 'Profissional'}</p>
-                  <p className="text-white/50 text-sm">{form.profession || 'Serviços gerais'} · {form.city || 'Teresina'}</p>
-                  <p className="text-[#FFD100] text-sm font-semibold mt-1">{form.price || 'A partir de R$ 80'}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-6">
-            {step < steps.length - 1 ? (
-              <button onClick={handleNext} className="w-full bg-[#FFD100] text-[#0A1628] font-bold py-4 rounded-2xl hover:bg-[#FFDE33] transition-colors">
-                {step === steps.length - 2 ? 'Finalizar cadastro' : 'Continuar'}
-              </button>
-            ) : (
-              <button onClick={() => navigate('/')} className="w-full bg-[#FFD100] text-[#0A1628] font-bold py-4 rounded-2xl hover:bg-[#FFDE33] transition-colors">
-                Ir para o início
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </PageTransition>
-  );
+  return <main className="min-h-screen bg-[#0A1628] px-4 pb-24 pt-24 text-white"><div className="mx-auto max-w-xl">
+    <h1 className="text-2xl font-black">Anuncie seu serviço</h1>
+    <p className="mt-2 text-white/60">O cadastro é gratuito. A equipe analisa o perfil antes de publicar.</p>
+    {done ? <div className="mt-8 rounded-2xl bg-[#0D1F3C] p-6"><h2 className="text-xl font-bold">Cadastro recebido</h2><p className="mt-2 text-white/60">Você poderá acompanhar a análise na sua área.</p><button onClick={() => navigate('/cliente')} className="mt-5 rounded-xl bg-[#FFD100] px-5 py-3 font-bold text-[#0A1628]">Ir para minha área</button></div>
+      : <div className="mt-6 grid gap-4 rounded-2xl bg-[#0D1F3C] p-5">
+        <label>Nome público<input value={publicName} onChange={event => setPublicName(event.target.value)} maxLength={120} className="mt-1 w-full rounded-xl bg-white p-3 text-[#0A1628]" /></label>
+        <label>Serviço<select value={serviceId} onChange={event => setServiceId(event.target.value)} className="mt-1 w-full rounded-xl bg-white p-3 text-[#0A1628]"><option value="">Selecione</option>{categories.map(category => <option key={category.id} value={category.serviceId}>{category.name}</option>)}</select></label>
+        <ServiceTagsInput tags={tags} onChange={setTags} disabled={busy} />
+        <label>Sobre seu trabalho<textarea value={bio} onChange={event => setBio(event.target.value)} maxLength={2000} rows={5} className="mt-1 w-full rounded-xl bg-white p-3 text-[#0A1628]" /></label>
+        <label>Telefone para contato<input type="tel" value={phone} onChange={event => setPhone(event.target.value)} placeholder="DDD + número" className="mt-1 w-full rounded-xl bg-white p-3 text-[#0A1628]" /></label>
+        <label>Cidade<input value={city} onChange={event => setCity(event.target.value)} className="mt-1 w-full rounded-xl bg-white p-3 text-[#0A1628]" /></label>
+        <label>Anos de experiência<input type="number" min="0" max="70" value={yearsExperience} onChange={event => setYearsExperience(event.target.value)} className="mt-1 w-full rounded-xl bg-white p-3 text-[#0A1628]" /></label>
+        <label>Preço inicial em reais<input type="number" min="0" value={startingPrice} onChange={event => setStartingPrice(event.target.value)} className="mt-1 w-full rounded-xl bg-white p-3 text-[#0A1628]" /></label>
+        <fieldset><legend className="mb-2">Dias de atendimento</legend><div className="flex flex-wrap gap-2">{[
+          ['Dom',0],['Seg',1],['Ter',2],['Qua',3],['Qui',4],['Sex',5],['Sáb',6],
+        ].map(([label,day]) => <label key={day} className="flex items-center gap-1 rounded-lg bg-white/10 px-3 py-2 text-sm"><input type="checkbox" checked={weekdays.includes(Number(day))} onChange={() => setWeekdays(previous => previous.includes(Number(day)) ? previous.filter(value => value !== Number(day)) : [...previous, Number(day)])} />{label}</label>)}</div></fieldset>
+        <div className="grid grid-cols-2 gap-3"><label>Das<input type="time" value={startsAt} onChange={event => setStartsAt(event.target.value)} className="mt-1 w-full rounded-xl bg-white p-3 text-[#0A1628]" /></label><label>Até<input type="time" value={endsAt} onChange={event => setEndsAt(event.target.value)} className="mt-1 w-full rounded-xl bg-white p-3 text-[#0A1628]" /></label></div>
+        {attempted && missing.length > 0 && <div role="alert" className="rounded-xl bg-amber-950/70 p-4 text-sm text-amber-100"><p className="font-bold">Confira antes de enviar:</p><ul className="mt-2 list-disc space-y-1 pl-5">{missing.map(message => <li key={message}>{message}</li>)}</ul></div>}
+        {error && <p role="alert" className="text-red-300">{error}</p>}
+        <button onClick={submit} disabled={busy} className="rounded-xl bg-[#FFD100] p-3 font-bold text-[#0A1628] disabled:opacity-50">{busy ? 'Enviando...' : 'Enviar cadastro'}</button>
+      </div>}
+  </div></main>;
 }

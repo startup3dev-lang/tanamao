@@ -2,15 +2,14 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Heart } from 'lucide-react';
 import gsap from 'gsap';
-import { professionals } from '../data/mockData';
 import { ProfessionalCard } from '../components/ProfessionalCard';
 import { PageTransition } from '../components/PageTransition';
 import { useApp } from '../context/AppContext';
 
 export function Favorites() {
   const navigate = useNavigate();
-  const { favorites } = useApp();
-  const favPros = professionals.filter(p => favorites.includes(p.id));
+  const { favorites, professionals } = useApp();
+  const favPros = professionals.filter(p => favorites.includes(String(p.id)));
   const cardsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

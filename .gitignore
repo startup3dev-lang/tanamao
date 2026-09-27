@@ -1,8 +1,10 @@
 node_modules/
 dist/
+.demo-db/
 .vite/
 .env
 .env.*
+!.env.example
 *.local
 npm-debug.log*
 yarn-debug.log*

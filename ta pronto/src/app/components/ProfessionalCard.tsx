@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { BadgeCheck, ChevronRight, Clock, Heart, MapPin, ShieldCheck, Sparkles, Star } from 'lucide-react';
 import { motion } from 'motion/react';
-import { type Professional } from '../data/mockData';
+import { type Professional } from '../api/professional';
 import { useApp } from '../context/AppContext';
 
 interface ProfessionalCardProps {
@@ -12,7 +12,7 @@ interface ProfessionalCardProps {
 export function ProfessionalCard({ pro, featured = false }: ProfessionalCardProps) {
   const navigate = useNavigate();
   const { setSelectedProfessional, favorites, toggleFavorite, setShowLoginModal, setLoginIntent, isLoggedIn } = useApp();
-  const isFav = favorites.includes(pro.id);
+  const isFav = favorites.includes(String(pro.id));
 
   const handleViewProfile = () => {
     setSelectedProfessional(pro);
@@ -25,7 +25,7 @@ export function ProfessionalCard({ pro, featured = false }: ProfessionalCardProp
       setLoginIntent('orcamento');
       setShowLoginModal(true);
     } else {
-      navigate('/orcamento');
+      navigate(`/orcamento?profissional=${pro.id}`);
     }
   };
 
@@ -64,7 +64,7 @@ export function ProfessionalCard({ pro, featured = false }: ProfessionalCardProp
                 </div>
                 <p className="text-sm text-white/65">{pro.profession}</p>
               </div>
-              <button onClick={() => toggleFavorite(pro.id)} className="rounded-full p-1.5 transition-colors hover:bg-white/10">
+              <button onClick={() => toggleFavorite(pro.id).catch(cause => alert(cause.message))} className="rounded-full p-1.5 transition-colors hover:bg-white/10">
                 <Heart size={18} className={isFav ? 'text-[#FFD100]' : 'text-white/35'} fill={isFav ? '#FFD100' : 'none'} />
               </button>
             </div>
@@ -94,7 +94,7 @@ export function ProfessionalCard({ pro, featured = false }: ProfessionalCardProp
           {pro.discount && <span className="rounded-full bg-[#FFD100] px-2.5 py-1 text-xs font-black text-[#071327]">{pro.discount}</span>}
           {pro.verified && (
             <span className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/70">
-              <ShieldCheck size={12} /> Verificado
+              <ShieldCheck size={12} /> Perfil aprovado
             </span>
           )}
         </div>

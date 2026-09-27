@@ -11,7 +11,8 @@ insert into service_categories (slug, name, icon_key, display_order) values
   ('chaveiro', 'Chaveiro', 'chaveiro', 90),
   ('marceneiro', 'Marceneiro', 'marceneiro', 100),
   ('gesseiro', 'Gesseiro', 'gesseiro', 110),
-  ('servicos-gerais', 'Serviços Gerais', 'gerais', 120)
+  ('servicos-gerais', 'Serviços Gerais', 'gerais', 120),
+  ('mecanico', 'Mecânico', 'gerais', 130)
 on conflict (slug) do update set
   name = excluded.name,
   icon_key = excluded.icon_key,

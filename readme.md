@@ -4,36 +4,36 @@ Esse documento foi criado para organizar as ideias iniciais do projeto, definir 
 1. Ideia do Projeto
 A ideia principal é criar uma plataforma onde clientes consigam encontrar prestadores de serviço de forma simples, rápida e segura.
 
-O sistema vai permitir que o prestador crie um perfil, divulgue seus serviços e receba pagamentos pela própria plataforma.
+O sistema permite que o prestador crie um perfil, divulgue seus serviços e receba solicitações de clientes.
 
 2. Objetivo
 * Facilitar o contato entre cliente e prestador
 * Organizar agendamentos
-* Centralizar pagamentos
+* Organizar propostas e conversas
 * Criar um sistema escalável para crescimento futuro
 3. Como a Plataforma Vai Ganhar Dinheiro
-No começo, os prestadores poderão usar a plataforma sem mensalidade fixa. A monetização inicial será através de comissão sobre serviços realizados.
+No começo, os prestadores poderão anunciar sem mensalidade ou comissão. A monetização inicial será por anúncios Google AdSense, após aprovação do domínio.
 
-Depois que o prestador alcançar um certo nível de utilização ou quantidade de clientes, poderá existir um plano mensal.
+Quando houver demanda suficiente de clientes, poderá existir um plano mensal de assinatura para anunciar serviços. A cobrança está inativa nesta fase.
 
 4. Funcionalidades do MVP
 * Cadastro e login
 * Perfil do prestador
 * Busca de serviços
 * Agendamento
-* Pagamento integrado
+* Propostas e contratação sem pagamento integrado nesta fase
 * Histórico de atendimentos
 5. Fluxo Básico do Sistema
 1. Prestador cria conta
 2. Prestador adiciona serviço
 3. Cliente pesquisa o serviço
 4. Cliente agenda atendimento
-5. Pagamento é processado
+5. Cliente aceita a proposta
 6. Serviço é concluído
 6. Estrutura Técnica Inicial
 A princípio, o sistema pode utilizar React no front-end, Node.js no back-end e PostgreSQL como banco de dados.
 
-Os pagamentos podem ser feitos utilizando API bancária com suporte a Pix.
+Nesta fase, a plataforma não processa pagamentos. A futura assinatura para anunciar serviços dependerá da escolha de um provedor de cobrança.
 
 7. Próximos Passos
 7. Criar identidade visual
