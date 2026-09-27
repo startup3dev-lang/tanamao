@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { api, patch, post } from '../api/client';
 import type { ProviderRequest, ServiceRequest } from '../api/types';
 import { useApp } from '../context/AppContext';
+import { ServiceTagsInput } from '../components/ServiceTagsInput';
 
 const statusLabel: Record<string, string> = {
   open: 'Aguardando proposta', quoted: 'Proposta recebida', accepted: 'Contratado', cancelled: 'Cancelado',
@@ -10,12 +11,14 @@ const statusLabel: Record<string, string> = {
 };
 
 export function ClientArea() {
-  const { user, authLoading, setShowLoginModal, logout } = useApp();
+  const { user, authLoading, setShowLoginModal, logout, refreshCatalog } = useApp();
   const navigate = useNavigate();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [providerRequests, setProviderRequests] = useState<ProviderRequest[]>([]);
   const [profileStatus, setProfileStatus] = useState<string | null>(null);
   const [available, setAvailable] = useState(false);
+  const [serviceTags, setServiceTags] = useState<string[]>([]);
+  const [savedTags, setSavedTags] = useState<string[]>([]);
   const [quoteId, setQuoteId] = useState<string | null>(null);
   const [laborAmount, setLaborAmount] = useState('');
   const [materialsAmount, setMaterialsAmount] = useState('0');
@@ -29,12 +32,14 @@ export function ClientArea() {
       const [customer, provider, profile] = await Promise.all([
         api<{ requests: ServiceRequest[] }>('/requests'),
         api<{ requests: ProviderRequest[] }>('/provider/requests'),
-        api<{ profile: { verification_status: string; available_now: boolean } | null }>('/provider/me'),
+        api<{ profile: { verification_status: string; available_now: boolean; service_tags: string[] } | null }>('/provider/me'),
       ]);
       setRequests(customer.requests);
       setProviderRequests(provider.requests);
       setProfileStatus(profile.profile?.verification_status || null);
       setAvailable(!!profile.profile?.available_now);
+      setServiceTags(profile.profile?.service_tags || []);
+      setSavedTags(profile.profile?.service_tags || []);
       setError('');
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível carregar seus pedidos'); }
   };
@@ -78,6 +83,12 @@ export function ClientArea() {
       <section><h2 className="mb-4 text-xl font-bold">Área do profissional</h2>
         {!profileStatus && <button onClick={() => navigate('/cadastro-profissional')} className="rounded-xl bg-[#FFD100] px-5 py-3 font-bold text-[#0A1628]">Cadastrar meus serviços</button>}
         {profileStatus && profileStatus !== 'verified' && <p className="rounded-xl bg-white/10 p-4">Cadastro em análise: {profileStatus}.</p>}
+        {profileStatus && <div className="rounded-xl bg-[#0D1F3C] p-4"><h3 className="mb-3 font-bold">Seus serviços</h3>
+          <ServiceTagsInput tags={serviceTags} onChange={setServiceTags} disabled={busy} />
+          <button disabled={busy || JSON.stringify(serviceTags) === JSON.stringify(savedTags)}
+            onClick={() => run(async () => { await patch('/provider/tags', { tags: serviceTags }); await refreshCatalog(); })}
+            className="mt-4 rounded-xl bg-[#FFD100] px-5 py-3 font-bold text-[#0A1628] disabled:opacity-50">Salvar serviços</button>
+        </div>}
         {profileStatus === 'verified' && <div className="space-y-3"><label className="flex items-center gap-3 rounded-xl bg-[#0D1F3C] p-4"><input type="checkbox" checked={available} disabled={busy} onChange={event => run(async () => { await patch('/provider/availability', { available: event.target.checked }); setAvailable(event.target.checked); })} />Disponível para novos pedidos</label>{providerRequests.length === 0 && <p className="text-white/50">Nenhuma solicitação recebida.</p>}
           {providerRequests.map(request => <article key={request.id} className="rounded-2xl border border-white/10 bg-[#0D1F3C] p-4">
             <h3 className="font-bold">{request.title}</h3><p className="mt-2 text-sm text-white/70">{request.description}</p>

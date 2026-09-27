@@ -15,6 +15,12 @@ const navLinks = [
 export function Header() {
   const { location, isLoggedIn, user, logout, setShowLoginModal, setShowLocationModal } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const signOut = async () => {
+    setAuthError('');
+    try { await logout(); setMobileOpen(false); }
+    catch (cause) { setAuthError(cause instanceof Error ? cause.message : 'Não foi possível sair'); }
+  };
 
   return (
     <motion.header initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="fixed top-0 left-0 right-0 z-50 border-b border-black/5 bg-white/90 shadow-sm backdrop-blur-xl">
@@ -55,7 +61,7 @@ export function Header() {
                 <Link to="/cliente" className="text-sm font-medium text-black/65 transition-colors hover:text-[#ea1d2c]">
                   Olá, {user?.name.split(' ')[0]}
                 </Link>
-                <button onClick={logout} className="text-sm text-black/45 transition-colors hover:text-black">
+                <button onClick={signOut} className="text-sm text-black/45 transition-colors hover:text-black">
                   Sair
                 </button>
               </>
@@ -110,11 +116,11 @@ export function Header() {
             ))}
             <div className="pt-2 space-y-2">
               {isLoggedIn ? (
-                <button onClick={() => { logout(); setMobileOpen(false); }} className="w-full text-left px-3 py-2.5 text-white/70 text-sm">
+                <button onClick={signOut} className="w-full text-left px-3 py-2.5 text-black/70 text-sm">
                   Sair
                 </button>
               ) : (
-                <button onClick={() => { setShowLoginModal(true); setMobileOpen(false); }} className="w-full text-left px-3 py-2.5 text-white/70 text-sm">
+                <button onClick={() => { setShowLoginModal(true); setMobileOpen(false); }} className="w-full text-left px-3 py-2.5 text-black/70 text-sm">
                   Entrar
                 </button>
               )}
@@ -129,6 +135,7 @@ export function Header() {
           </div>
         </motion.div>
       )}</AnimatePresence>
+      {authError && <p role="alert" className="bg-red-100 px-4 py-2 text-center text-sm text-red-800">{authError}</p>}
     </motion.header>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { ChevronLeft, Camera, CheckCircle, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, CheckCircle, ShieldCheck } from 'lucide-react';
 import { PageTransition } from '../components/PageTransition';
 import { useApp } from '../context/AppContext';
 import { post } from '../api/client';
@@ -21,21 +21,35 @@ export function QuoteRequest() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [attempted, setAttempted] = useState(false);
   const [preferredAt, setPreferredAt] = useState('');
   const [address, setAddress] = useState({ postalCode: '', street: '', number: '', neighborhood: '', city: 'Teresina', state: 'PI' });
 
   const pro = professionals.find(item => String(item.id) === params.get('profissional')) || selectedProfessional;
+  const missing = [
+    !pro && 'Escolha um profissional.',
+    !description.trim() && 'Descreva o serviço que precisa.',
+    !/^\d{8}$/.test(address.postalCode.replace(/\D/g, '')) && 'Informe um CEP com 8 dígitos.',
+    !address.street.trim() && 'Informe a rua.',
+    !address.number.trim() && 'Informe o número.',
+    !address.neighborhood.trim() && 'Informe o bairro.',
+    address.city.trim().toLocaleLowerCase('pt-BR') !== 'teresina' && 'Nesta etapa, a cidade deve ser Teresina.',
+    address.state.trim().toUpperCase() !== 'PI' && 'Nesta etapa, a UF deve ser PI.',
+    urgency === 'data' && (!preferredAt || new Date(preferredAt) <= new Date()) && 'Escolha uma data e horário futuros.',
+  ].filter((item): item is string => typeof item === 'string');
 
   const handleSubmit = async () => {
+    setAttempted(true);
+    if (missing.length) return;
     if (!user) { setShowLoginModal(true); return; }
-    if (!pro?.serviceId || !description.trim()) return;
+    if (!pro?.serviceId) { setError('Profissional indisponível para este serviço.'); return; }
     setBusy(true); setError('');
     try {
-      const result = await post<{ request: { id: string } }>('/requests', {
+      await post<{ request: { id: string } }>('/requests', {
         providerId: String(pro.id), serviceId: pro.serviceId, title: pro.profession,
         description: description.trim(), urgency: urgency === 'hoje' ? 'today' : urgency === 'amanha' ? 'tomorrow' : urgency === 'semana' ? 'this_week' : 'scheduled',
         preferredAt: urgency === 'data' && preferredAt ? new Date(preferredAt).toISOString() : null,
-        address,
+        address: { ...address, postalCode: address.postalCode.replace(/\D/g, '') },
       });
       setSubmitted(true);
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível enviar'); }
@@ -110,9 +124,6 @@ export function QuoteRequest() {
               placeholder="Ex: Preciso instalar 3 tomadas novas na cozinha e trocar o disjuntor principal..."
               className="w-full h-28 p-3 bg-gray-50 border border-gray-200 rounded-xl text-[#1A2A4A] text-sm resize-none focus:outline-none focus:border-[#FFD100] transition-colors"
             />
-            <button className="flex items-center gap-2 text-gray-400 text-sm mt-3 hover:text-gray-600 transition-colors">
-              <Camera size={16} /> Adicionar fotos (opcional)
-            </button>
           </div>
 
           {/* Urgency */}
@@ -146,10 +157,11 @@ export function QuoteRequest() {
           </div>
 
           {/* Submit */}
+          {attempted && missing.length > 0 && <div role="alert" className="rounded-xl bg-amber-950/70 p-4 text-sm text-amber-100"><p className="font-bold">Confira antes de enviar:</p><ul className="mt-2 list-disc space-y-1 pl-5">{missing.map(message => <li key={message}>{message}</li>)}</ul></div>}
           <button
             onClick={handleSubmit}
-            disabled={busy || !pro || !description.trim() || Object.values(address).some(value => !value.trim()) || (urgency === 'data' && !preferredAt)}
-            className="w-full bg-[#FFD100] text-[#0A1628] font-bold py-4 rounded-2xl hover:bg-[#FFDE33] transition-colors text-base shadow-lg"
+            disabled={busy}
+            className="w-full bg-[#FFD100] text-[#0A1628] font-bold py-4 rounded-2xl hover:bg-[#FFDE33] transition-colors text-base shadow-lg disabled:opacity-50"
           >
             {busy ? 'Enviando...' : 'Confirmar solicitação'}
           </button>

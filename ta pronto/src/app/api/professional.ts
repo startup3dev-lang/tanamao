@@ -20,6 +20,7 @@ export type Professional = {
   discount: string | null;
   bio: string;
   services: string[];
+  serviceTags: string[];
   responseTime: string;
   availability: string;
 };

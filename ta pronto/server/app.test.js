@@ -14,7 +14,7 @@ const mutation = agent => ({
 test('cadastro, aprovação, pedido, proposta, conversa e avaliação persistem com permissões', async () => {
   const pg = new PGlite();
   try {
-    for (const file of ['001_initial_schema.sql','002_application.sql','003_future_subscriptions.sql']) {
+    for (const file of ['001_initial_schema.sql','002_application.sql','003_future_subscriptions.sql','004_provider_service_tags.sql']) {
       await pg.exec(await readFile(new URL(`../database/migrations/${file}`, import.meta.url), 'utf8'));
     }
     await pg.exec(await readFile(new URL('../database/seed.sql', import.meta.url), 'utf8'));
@@ -33,7 +33,8 @@ test('cadastro, aprovação, pedido, proposta, conversa e avaliação persistem 
     assert.equal(categories.status, 200);
     const serviceId = categories.body.categories[0].service_id;
     const apply = await mutation(provider).post('/api/providers/apply', { publicName: 'João Reparos', bio: 'Instalações e reparos na cidade.', serviceId, startingPrice: 100,
-      phone: '86999999999', city: 'Teresina', yearsExperience: 4, weekdays: [1,2,3,4,5], startsAt: '08:00', endsAt: '18:00' });
+      phone: '86999999999', city: 'Teresina', yearsExperience: 4, weekdays: [1,2,3,4,5], startsAt: '08:00', endsAt: '18:00',
+      tags: ['Capinar quintal', 'Podar árvores'] });
     assert.equal(apply.status, 201, JSON.stringify(apply.body));
     assert.equal((await customer.get('/api/providers')).body.providers.length, 0);
 
@@ -43,6 +44,17 @@ test('cadastro, aprovação, pedido, proposta, conversa e avaliação persistem 
     const approved = await mutation(customer).patch(`/api/admin/providers/${providerRegister.body.user.id}/verification`, { status: 'verified' });
     assert.equal(approved.status, 200, JSON.stringify(approved.body));
     assert.equal((await customer.get('/api/providers')).body.providers.length, 1);
+    assert.deepEqual((await customer.get('/api/providers?search=capinar%20quintal')).body.providers[0].service_tags, ['Capinar quintal', 'Podar árvores']);
+    assert.equal((await customer.get('/api/providers?search=capinar%20quintal')).body.providers.length, 1);
+    assert.equal((await customer.get('/api/providers?search=servico%20inexistente')).body.providers.length, 0);
+    const otherTagEdit = await mutation(stranger).patch('/api/provider/tags', { tags: ['Instalar tomadas'] });
+    assert.equal(otherTagEdit.status, 404);
+    const duplicateTags = await mutation(provider).patch('/api/provider/tags', { tags: ['Podar árvores', 'podar arvores'] });
+    assert.equal(duplicateTags.status, 400);
+    const editedTags = await mutation(provider).patch('/api/provider/tags', { tags: ['Limpar quintal'] });
+    assert.equal(editedTags.status, 200);
+    assert.equal((await customer.get('/api/providers?search=capinar%20quintal')).body.providers.length, 0);
+    assert.equal((await customer.get('/api/providers?search=limpar%20quintal')).body.providers.length, 1);
     const availability = await mutation(provider).patch('/api/provider/availability', { available: true });
     assert.equal(availability.status, 200);
     assert.equal((await customer.get('/api/providers')).body.providers[0].available, true);

@@ -5,12 +5,12 @@ import { DEFAULT_LOCATION } from '../utils/serviceArea';
 
 type User = { id: string; name: string; email: string };
 export type Category = { id: string; serviceId: string; name: string; icon: string; count: number; popular: boolean };
-type ProviderRow = { id: string; name: string; bio: string | null; available: boolean; rating: string;
+export type ProviderRow = { id: string; name: string; bio: string | null; available: boolean; rating: string;
   reviews: number; completed_jobs: number; profession: string; category: string; category_id: string;
-  service_id: string; starting_price: string | null; services: string[] };
+  service_id: string; starting_price: string | null; services: string[]; service_tags: string[] };
 type CategoryRow = { id: string; service_id: string; name: string; icon_key: string | null };
 
-function adaptProvider(row: ProviderRow): Professional {
+export function adaptProvider(row: ProviderRow): Professional {
   const price = Number(row.starting_price || 0);
   const initials = row.name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase();
   return {
@@ -19,7 +19,7 @@ function adaptProvider(row: ProviderRow): Professional {
     distance: 'Teresina', eta: 'Consulte', price: price ? `A partir de R$ ${price}` : 'Sob consulta',
     priceRange: price ? `A partir de R$ ${price}` : 'Sob consulta', available: row.available,
     badge: 'Profissional verificado', verified: true, initials, color: '#2563EB', discount: null,
-    bio: row.bio || '', services: row.services, responseTime: 'Consulte', availability: row.available ? 'Disponível agora' : 'Consulte disponibilidade',
+    bio: row.bio || '', services: row.services, serviceTags: row.service_tags || [], responseTime: 'Consulte', availability: row.available ? 'Disponível agora' : 'Consulte disponibilidade',
     serviceId: row.service_id, categoryId: row.category_id,
   };
 }

@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'node:crypto';
 import { z, ZodError } from 'zod';
 import { canTransition, isConversationMember } from './policy.js';
+import { normalizeServiceTag, saveServiceTags, serviceTags } from './service-tags.js';
 
 const uuid = z.string().uuid();
 const email = z.string().trim().email().max(254).transform(v => v.toLowerCase());
@@ -118,7 +119,8 @@ export function createApp(db, { webOrigin = process.env.WEB_ORIGIN } = {}) {
   const providerSelect = `select p.user_id as id,p.public_name as name,p.bio,p.available_now as available,
     p.verification_status,p.rating_average as rating,p.rating_count as reviews,p.completed_jobs,p.city,p.state,
     s.name as profession,c.name as category,c.id as category_id,s.id as service_id,ps.starting_price,
-    array[s.name] as services
+    array[s.name] as services,
+    array(select tag.label from provider_service_tags tag where tag.provider_id=p.user_id order by tag.created_at,tag.label) as service_tags
     from provider_profiles p join provider_services ps on ps.provider_id=p.user_id and ps.is_active
     join services s on s.id=ps.service_id and s.is_active
     join service_categories c on c.id=s.category_id and c.is_active`;
@@ -126,8 +128,12 @@ export function createApp(db, { webOrigin = process.env.WEB_ORIGIN } = {}) {
     const search = z.string().trim().max(100).optional().parse(req.query.search);
     const category = uuid.optional().parse(req.query.category);
     const result = await db.query(`${providerSelect} where p.verification_status='verified'
-      and ($1::text is null or p.public_name ilike '%'||$1||'%' or s.name ilike '%'||$1||'%')
-      and ($2::uuid is null or c.id=$2) order by p.rating_average desc limit 100`, [search || null, category || null]);
+      and ($1::text is null or p.public_name ilike '%'||$1||'%' or p.bio ilike '%'||$1||'%'
+        or s.name ilike '%'||$1||'%' or c.name ilike '%'||$1||'%'
+        or exists (select 1 from provider_service_tags tag where tag.provider_id=p.user_id
+          and position($3 in tag.normalized_tag)>0))
+      and ($2::uuid is null or c.id=$2) order by p.rating_average desc limit 100`,
+      [search || null, category || null, normalizeServiceTag(search || '')]);
     res.json({ providers: result.rows });
   });
   app.get('/api/providers/:id', async (req, res) => {
@@ -143,8 +149,18 @@ export function createApp(db, { webOrigin = process.env.WEB_ORIGIN } = {}) {
   });
 
   app.get('/api/provider/me', requireAuth, async (req, res) => {
-    const result = await db.query('select public_name,verification_status,bio,available_now from provider_profiles where user_id=$1', [req.user.id]);
+    const result = await db.query(`select p.public_name,p.verification_status,p.bio,p.available_now,
+      array(select tag.label from provider_service_tags tag where tag.provider_id=p.user_id order by tag.created_at,tag.label) as service_tags
+      from provider_profiles p where p.user_id=$1`, [req.user.id]);
     res.json({ profile: result.rows[0] || null });
+  });
+  app.patch('/api/provider/tags', requireAuth, async (req, res) => {
+    const { tags } = z.object({ tags: serviceTags }).strict().parse(req.body);
+    await db.transaction(async client => {
+      one(await client.query('select user_id from provider_profiles where user_id=$1 for update', [req.user.id]));
+      await saveServiceTags(client, req.user.id, tags);
+    });
+    res.json({ tags });
   });
   app.patch('/api/provider/availability', requireAuth, async (req, res) => {
     const input = z.object({ available: z.boolean() }).strict().parse(req.body);
@@ -153,7 +169,7 @@ export function createApp(db, { webOrigin = process.env.WEB_ORIGIN } = {}) {
   });
 
   app.post('/api/providers/apply', requireAuth, async (req, res) => {
-    const input = z.object({ publicName: safeText(120), bio: safeText(2000), serviceId: uuid,
+    const input = z.object({ publicName: safeText(120), bio: safeText(2000), serviceId: uuid, tags: serviceTags,
       startingPrice: z.number().nonnegative().max(1_000_000), phone: z.string().regex(/^\d{10,11}$/),
       city: safeText(100), yearsExperience: z.number().int().min(0).max(70),
       weekdays: z.array(z.number().int().min(0).max(6)).min(1).max(7).refine(days => new Set(days).size === days.length),
@@ -168,6 +184,7 @@ export function createApp(db, { webOrigin = process.env.WEB_ORIGIN } = {}) {
       await client.query(`insert into provider_profiles(user_id,public_name,bio,years_experience,city,state)
         values($1,$2,$3,$4,$5,'PI')`, [req.user.id, input.publicName, input.bio,input.yearsExperience,input.city]);
       await client.query(`insert into provider_services(provider_id,service_id,starting_price) values($1,$2,$3)`, [req.user.id, input.serviceId, input.startingPrice]);
+      await saveServiceTags(client, req.user.id, input.tags);
       for (const weekday of input.weekdays) {
         await client.query(`insert into provider_availability(provider_id,weekday,starts_at,ends_at)
           values($1,$2,$3,$4)`, [req.user.id,weekday,input.startsAt,input.endsAt]);

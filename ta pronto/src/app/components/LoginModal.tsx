@@ -42,6 +42,10 @@ export function LoginModal() {
 
   const handleEmailLogin = async () => {
     setError('');
+    if (step === 'register' && !name.trim()) { setError('Informe seu nome.'); return; }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) { setError('Informe um e-mail válido.'); return; }
+    if (!password) { setError('Informe sua senha.'); return; }
+    if (step === 'register' && password.length < 12) { setError('A senha precisa ter pelo menos 12 caracteres.'); return; }
     setBusy(true);
     try {
       if (step === 'register') await register(name, email, password);
@@ -119,7 +123,7 @@ export function LoginModal() {
               {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
               <button
                 onClick={handleEmailLogin}
-                disabled={busy || !email || !password || (step === 'register' && (!name || password.length < 12))}
+                disabled={busy}
                 className="w-full bg-[#FFD100] text-[#0A1628] font-bold py-3 rounded-xl hover:bg-[#FFDE33] transition-colors"
               >
                 {busy ? 'Aguarde...' : step === 'register' ? 'Criar conta' : 'Entrar'}

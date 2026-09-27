@@ -9,10 +9,11 @@ Marketplace de serviços em Teresina. Clientes procuram prestadores, enviam pedi
 - Banco: PostgreSQL 15+; migrações versionadas em `database/migrations`.
 - Monetização inicial: Google AdSense (Auto ads). Não há cobrança de prestadores.
 - Assinaturas futuras: tabelas preparadas, sem planos ativos, gateway ou cobrança. Ativar assinaturas exige implementar integração com o provedor de pagamento, webhooks idempotentes e regras de acesso.
+- Busca de serviços: cada prestador escolhe uma categoria e adiciona até 15 tags específicas (por exemplo, “capinar quintal”). As tags aparecem no perfil, entram na busca e podem ser editadas na área do profissional.
 
 ## Desenvolvimento local
 
-Para uma prévia local sem instalar PostgreSQL, execute `npm run build` e `npm run api:demo`. Abra `http://localhost:5173/tanamao/`. A demonstração guarda os dados em `.demo-db/` (ignorados pelo Git) e só aceita conexões locais. Há um prestador aprovado (`prestador.demo@tapronto.local`) e um administrador (`admin.demo@tapronto.local`), ambos com a senha `TesteLocal123!`. Crie uma conta de cliente pela interface para testar pedidos, propostas, conversa e avaliação. Estes usuários são exclusivamente de teste e não existem no banco de produção.
+Para uma prévia local sem instalar PostgreSQL, execute `npm run build` e `npm run api:demo`. Abra `http://localhost:5173/tanamao/`. A demonstração guarda os dados em `.demo-db/` (ignorados pelo Git) e só aceita conexões locais. Há dois prestadores aprovados (`prestador.demo@tapronto.local` e `jardineira.demo@tapronto.local`) e um administrador (`admin.demo@tapronto.local`), todos com a senha `TesteLocal123!`. Busque “capinar quintal” para encontrar Maria Jardins. Crie uma conta de cliente pela interface para testar pedidos, propostas, conversa e avaliação. Estes usuários são exclusivamente de teste e não existem no banco de produção.
 
 1. Crie um PostgreSQL 15+ vazio.
 2. Copie `.env.example` para `.env` e preencha `DATABASE_URL` e `WEB_ORIGIN=http://localhost:5173`.

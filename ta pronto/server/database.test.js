@@ -6,7 +6,7 @@ import { PGlite } from '@electric-sql/pglite';
 test('migrações e catálogo inicial executam em PostgreSQL', async () => {
   const db = new PGlite();
   try {
-    for (const file of ['001_initial_schema.sql','002_application.sql','003_future_subscriptions.sql']) {
+    for (const file of ['001_initial_schema.sql','002_application.sql','003_future_subscriptions.sql','004_provider_service_tags.sql']) {
       const sql = await readFile(new URL(`../database/migrations/${file}`, import.meta.url), 'utf8');
       await db.exec(sql);
     }
