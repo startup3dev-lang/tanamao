@@ -9,7 +9,6 @@ const navLinks = [
   { label: 'Início', to: '/' },
   { label: 'Categorias', to: '/categorias' },
   { label: 'Profissionais', to: '/profissionais' },
-  { label: 'Ofertas', to: '/ofertas' },
   { label: 'Como funciona', to: '/#como-funciona' },
 ];
 

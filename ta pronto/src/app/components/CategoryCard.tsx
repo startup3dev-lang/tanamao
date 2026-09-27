@@ -4,7 +4,7 @@ import { CategoryIcon } from './AppIcons';
 
 interface CategoryCardProps {
   category: {
-    id: number;
+    id: string;
     name: string;
     icon: string;
     count: number;

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { Tag, Clock, Zap } from 'lucide-react';
+import { Tag } from 'lucide-react';
 import gsap from 'gsap';
-import { professionals } from '../data/mockData';
+import { useApp } from '../context/AppContext';
 import { ProfessionalCard } from '../components/ProfessionalCard';
 import { PageTransition } from '../components/PageTransition';
 
-const discountPros = professionals.filter(p => p.discount);
 
 export function Offers() {
+  const { professionals } = useApp();
+  const discountPros = professionals.filter(p => p.discount);
   const cardsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,19 +35,6 @@ export function Offers() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 py-6">
-          {/* Urgency info */}
-          <div className="flex gap-3 mb-6 overflow-x-auto pb-1">
-            {[
-              { icon: <Zap size={14} />, text: 'Disponível hoje', color: 'bg-green-100 text-green-700' },
-              { icon: <Clock size={14} />, text: 'Poucos horários restantes', color: 'bg-orange-100 text-orange-700' },
-              { icon: <Tag size={14} />, text: 'Primeiro serviço com desconto', color: 'bg-blue-100 text-blue-700' },
-            ].map((badge, i) => (
-              <div key={i} className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold ${badge.color}`}>
-                {badge.icon} {badge.text}
-              </div>
-            ))}
-          </div>
-
           {discountPros.length === 0 ? (
             <div className="text-center py-16">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10">

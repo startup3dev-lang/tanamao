@@ -6,6 +6,7 @@ import { MobileNav } from './components/MobileNav';
 import { LocationModal } from './components/LocationModal';
 import { LoginModal } from './components/LoginModal';
 import { LoadingScreen } from './components/LoadingScreen';
+import { AdSlot } from './components/AdSlot';
 
 const Home = lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
 const Categories = lazy(() => import('./pages/Categories').then(module => ({ default: module.Categories })));
@@ -20,6 +21,7 @@ const ClientArea = lazy(() => import('./pages/ClientArea').then(module => ({ def
 const Offers = lazy(() => import('./pages/Offers').then(module => ({ default: module.Offers })));
 const Favorites = lazy(() => import('./pages/Favorites').then(module => ({ default: module.Favorites })));
 const ProfessionalRegister = lazy(() => import('./pages/ProfessionalRegister').then(module => ({ default: module.ProfessionalRegister })));
+const Privacy = lazy(() => import('./pages/Privacy').then(module => ({ default: module.Privacy })));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -34,6 +36,7 @@ function AppRoutes() {
       <Header />
       <LocationModal />
       <LoginModal />
+      <AdSlot />
       <Suspense fallback={<LoadingScreen />}><Routes>
         <Route path="/" element={<Home />} />
         <Route path="/categorias" element={<Categories />} />
@@ -42,12 +45,16 @@ function AppRoutes() {
         <Route path="/orcamento" element={<QuoteRequest />} />
         <Route path="/acompanhamento" element={<ServiceTracking />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/chat/:id" element={<Chat />} />
         <Route path="/chats" element={<Chats />} />
         <Route path="/avaliacao" element={<Rating />} />
+        <Route path="/avaliacao/:id" element={<Rating />} />
         <Route path="/cliente" element={<ClientArea />} />
         <Route path="/ofertas" element={<Offers />} />
         <Route path="/favoritos" element={<Favorites />} />
         <Route path="/cadastro-profissional" element={<ProfessionalRegister />} />
+        <Route path="/privacidade" element={<Privacy />} />
+        <Route path="/acompanhamento/:id" element={<ServiceTracking />} />
       </Routes></Suspense>
       <MobileNav />
     </>

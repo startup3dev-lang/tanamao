@@ -33,9 +33,14 @@ jobs:
         working-directory: ta pronto
         run: npm ci
 
-      - name: Buildar sem derrubar o martelo
+      - name: Validar e preparar publicação
         working-directory: ta pronto
-        run: npm run build
+        env:
+          VITE_ADSENSE_PUBLISHER_ID: ca-pub-8919406521141060
+          VITE_API_URL: ${{ vars.API_BASE_URL }}
+        run: |
+          test -n "$VITE_API_URL" || { echo 'Configure a variável API_BASE_URL no repositório.'; exit 1; }
+          npm run check
 
       - name: Preparar fallback das rotas
         working-directory: ta pronto

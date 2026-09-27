@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { Search, MapPin, SlidersHorizontal, X } from 'lucide-react';
 import gsap from 'gsap';
-import { professionals, categories } from '../data/mockData';
 import { ProfessionalCard } from '../components/ProfessionalCard';
 import { PageTransition } from '../components/PageTransition';
 import { useApp } from '../context/AppContext';
@@ -10,12 +9,9 @@ import { CategoryIcon, BadgeIcon } from '../components/AppIcons';
 import { isLocationSupported } from '../utils/serviceArea';
 
 const filters = [
-  { id: 'proximos', label: 'Mais próximos' },
   { id: 'avaliados', label: 'Melhor avaliados' },
   { id: 'disponiveis', label: 'Disponíveis agora' },
-  { id: 'desconto', label: 'Com desconto' },
   { id: 'preco', label: 'Menor preço' },
-  { id: 'verificados', label: 'Verificados' },
 ];
 
 const normalize = (value: string) => value
@@ -29,9 +25,9 @@ export function Professionals() {
   const initialCat = searchParams.get('categoria') || '';
   const initialSearch = searchParams.get('busca') || '';
   const [search, setSearch] = useState(initialSearch);
-  const [activeFilter, setActiveFilter] = useState('proximos');
+  const [activeFilter, setActiveFilter] = useState('avaliados');
   const [selectedCat, setSelectedCat] = useState(initialCat);
-  const { location, setShowLocationModal } = useApp();
+  const { location, setShowLocationModal, professionals, categories, catalogError, catalogLoading } = useApp();
   const hasCoverage = isLocationSupported(location);
   const cardsRef = useRef<HTMLDivElement>(null);
 
@@ -41,14 +37,14 @@ export function Professionals() {
       const searchable = normalize([p.name, p.profession, p.category, p.bio, ...p.services].join(' '));
       const matchSearch = !term || searchable.includes(term);
       const matchCat = !selectedCat || p.category === selectedCat;
-      const matchFilter = activeFilter === 'disponiveis' ? p.available : activeFilter === 'desconto' ? !!p.discount : activeFilter === 'verificados' ? p.verified : true;
+      const matchFilter = activeFilter === 'disponiveis' ? p.available : true;
       return matchSearch && matchCat && matchFilter;
     });
 
     return results.sort((a, b) => {
       if (activeFilter === 'avaliados') return b.rating - a.rating || b.reviews - a.reviews;
       if (activeFilter === 'preco') return Number(a.price.match(/\d+/)?.[0] ?? 0) - Number(b.price.match(/\d+/)?.[0] ?? 0);
-      return Number.parseFloat(a.distance) - Number.parseFloat(b.distance);
+      return b.rating - a.rating;
     });
   }, [activeFilter, search, selectedCat]);
 
@@ -132,6 +128,8 @@ export function Professionals() {
         </div>
 
         <div className="max-w-6xl mx-auto px-4 py-6">
+          {catalogLoading && <p className="text-white/70">Carregando profissionais...</p>}
+          {catalogError && <p role="alert" className="text-red-300">{catalogError}</p>}
           <div className="flex items-center justify-between mb-4">
             <p className="text-white/50 text-sm">
               <span className="text-white font-semibold">{hasCoverage ? filtered.length : 0}</span> profissionais encontrados
@@ -166,7 +164,7 @@ export function Professionals() {
             <div ref={cardsRef} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filtered.map((pro, i) => (
                 <div key={pro.id} className="pro-list-card" style={{ opacity: 0 }}>
-                  <ProfessionalCard pro={pro} featured={i === 0 && activeFilter === 'proximos'} />
+                  <ProfessionalCard pro={pro} featured={i === 0 && activeFilter === 'avaliados'} />
                 </div>
               ))}
             </div>

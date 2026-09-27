@@ -3,8 +3,6 @@
 
 begin;
 
-create extension if not exists pgcrypto;
-
 create function set_updated_at() returns trigger language plpgsql as $$
 begin
   new.updated_at = now();

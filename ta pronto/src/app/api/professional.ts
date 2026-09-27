@@ -1,0 +1,25 @@
+export type Professional = {
+  id: string;
+  serviceId: string;
+  categoryId: string;
+  name: string;
+  profession: string;
+  category: string;
+  rating: number;
+  reviews: number;
+  completedJobs: number;
+  distance: string;
+  eta: string;
+  price: string;
+  priceRange: string;
+  available: boolean;
+  badge: string;
+  verified: boolean;
+  initials: string;
+  color: string;
+  discount: string | null;
+  bio: string;
+  services: string[];
+  responseTime: string;
+  availability: string;
+};
